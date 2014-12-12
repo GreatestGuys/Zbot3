@@ -65,7 +65,7 @@ joinChannel channel = do
         }
         joinMessage  = baseMessage {command = "JOIN"}
         namesMessage = baseMessage {command = "NAMES"}
-        addChannel = \engineState -> engineState {
+        addChannel engineState = engineState {
             engineStateChannels = Map.insert
                 channel
                 emptyChannelState
@@ -84,7 +84,7 @@ partChannel channel = do
         ,   parameters = [channel]
         ,   trailing   = Nothing
         }
-        removeChannel = \engineState -> engineState {
+        removeChannel engineState = engineState {
             engineStateChannels =
                 Map.delete channel (engineStateChannels engineState)
         }
@@ -97,11 +97,11 @@ channelMode channel = do
 
 -- | Add a list of modes to a channel.
 addChannelMode :: Irc irc => Channel -> [ChannelMode] -> irc ()
-addChannelMode channel modes = mapM_ (sendModeMessage channel . AddMode) modes
+addChannelMode channel = mapM_ (sendModeMessage channel . AddMode)
 
 -- | Remove a list of modes from a channel.
 rmChannelMode :: Irc irc => Channel -> [ChannelMode] -> irc ()
-rmChannelMode channel modes = mapM_ (sendModeMessage channel . RmMode) modes
+rmChannelMode channel = mapM_ (sendModeMessage channel . RmMode)
 
 sendModeMessage :: (Irc irc)
                 => Channel
@@ -112,7 +112,7 @@ sendModeMessage channel diff = sendMessage BestEffort modeMessage
         modeMessage = Message {
             prefix     = Nothing
         ,   command    = "MODE"
-        ,   parameters = [channel] ++ renderDiff diff
+        ,   parameters = channel : renderDiff diff
         ,   trailing   = Nothing
         }
 

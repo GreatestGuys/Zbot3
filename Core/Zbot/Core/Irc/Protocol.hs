@@ -45,9 +45,10 @@ instance Render Message where
         ,   " "
         ,   T.intercalate " " parameters
         ,   trailingText
+        ,   "\x0d\x0a"
         ]
         where
-            trailingText | Just text <- trailing = ":" `T.append` text
+            trailingText | Just text <- trailing = " :" `T.append` text
                          | otherwise             = ""
 
             prefixText | Just justPrefix <- prefix = renderPrefix justPrefix
@@ -68,7 +69,7 @@ instance Parse Message where
     parse input = toMessage
                 $ Atto.parse (parseMessage <* Atto.endOfInput) input
         where
-            toMessage (Atto.Fail _ _ _)      = Nothing
+            toMessage (Atto.Fail{})      = Nothing
             toMessage (Atto.Partial partial) = toMessage $ partial T.empty
             toMessage (Atto.Done _ result)   = Just result
 
@@ -78,7 +79,7 @@ parseMessage = Message
     <*> parseCommand
     <*> parseParams
     <*> parseMaybe parseTrailing
-    <*  Atto.option "" (Atto.string "\x0d\x0a")
+    <*  Atto.string "\x0d\x0a"
 
 parsePrefix :: Atto.Parser Prefix
 parsePrefix =
