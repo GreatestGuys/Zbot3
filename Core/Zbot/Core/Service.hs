@@ -1,5 +1,6 @@
 module Zbot.Core.Service (
-    Collective
+    Collective (registerService, run)
+,   Handle
 ,   Service (..)
 ) where
 
