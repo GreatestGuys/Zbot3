@@ -2,8 +2,8 @@ name:            zbot-service-roll
 version:         3.0
 license:         MIT
 license-file:    ../../LICENSE
-author:          Will Coster <willcoster@gmail.com>, Jesse Frankely <number.dot.10@gmail.com>
-maintainer:      Will Coster <willcoster@gmail.com>, Jesse Frankely <number.dot.10@gmail.com>
+author:          Will Coster <willcoster@gmail.com>, Jesse Frankley <number.dot.10@gmail.com>
+maintainer:      Will Coster <willcoster@gmail.com>, Jesse Frankley <number.dot.10@gmail.com>
 synopsis:        A dice rolling service for ZBot.
 description:     See README.md
 category:        IRC
