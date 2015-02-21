@@ -20,7 +20,7 @@ roll = Service {
     initial     = Roll ()
 ,   serialize   = const Nothing
 ,   deserialize = const Nothing
-,   name        = "ZBot.Service.Roll"
+,   name        = "Zbot.Service.Roll"
 ,   process     = processEvent
 }
 

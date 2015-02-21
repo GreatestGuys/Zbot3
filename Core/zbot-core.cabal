@@ -18,7 +18,7 @@ library
         ,   containers                >= 0.5
         ,   mtl                       >= 2.1
         ,   network                   >= 2.4
-        ,   text                      >= 0.11
+        ,   text                      >= 1.2
         ,   transformers              >= 0.3
 
     exposed-modules:
@@ -36,7 +36,7 @@ library
         ,   Zbot.Core.Service.IO
         ,   Zbot.Core.Service.Types
 
-    ghc-options: -W -Werror -O2
+    ghc-options: -W -Werror
 
     default-extensions:
         OverloadedStrings

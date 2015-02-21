@@ -4,7 +4,6 @@ module Zbot.Core.Irc.Types (
 
 ,   Nick
 ,   User
-,   Host
 ,   Channel
 ,   ChannelMode (..)
 ,   ModeDiff (..)
@@ -22,8 +21,6 @@ type Port = Int
 type Nick = T.Text
 
 type User = T.Text
-
-type Host = T.Text
 
 type Channel = T.Text
 

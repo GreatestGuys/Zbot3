@@ -2,6 +2,13 @@ module Zbot.Core.Irc (
     Irc
 ,   Event (..)
 
+,   Server
+,   Port
+,   Nick
+,   User
+,   Channel
+,   ChannelMode (..)
+
 ,   nicks
 ,   channels
 ,   whisper

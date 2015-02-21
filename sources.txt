@@ -1,2 +1,4 @@
+./Cli
 ./Core
+./Example
 ./Services

@@ -9,7 +9,6 @@ import Zbot.Core.Bot.Types
 import Zbot.Core.Irc
 import Zbot.Core.Irc.Engine
 import Zbot.Core.Irc.Protocol
-import Zbot.Core.Irc.Types
 import Zbot.Core.Service.IO
 import Zbot.Core.Service.Types hiding (Handle)
 

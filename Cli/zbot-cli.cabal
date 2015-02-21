@@ -1,10 +1,10 @@
-name:            zbot-service-roll
+name:            zbot-cli
 version:         3.0
 license:         MIT
-license-file:    ../../LICENSE
+license-file:    ../LICENSE
 author:          Will Coster <willcoster@gmail.com>, Jesse Frankley <number.dot.10@gmail.com>
 maintainer:      Will Coster <willcoster@gmail.com>, Jesse Frankley <number.dot.10@gmail.com>
-synopsis:        A dice rolling service for Zbot.
+synopsis:        A command line interface framework for Zbot.
 description:     See README.md
 category:        IRC
 cabal-version:   >= 1.10
@@ -13,13 +13,12 @@ build-type:      Simple
 library
     build-depends:
             base                      >= 4.3      && < 5
-        ,   mtl                       >= 2.1
-        ,   random                    >= 1.0
+        ,   optparse-applicative      >= 0.11
         ,   text                      >= 1.2
         ,   zbot-core                 == 3.0
 
     exposed-modules:
-            Zbot.Service.Roll
+            Zbot.Cli
 
     ghc-options: -W -Werror
 
