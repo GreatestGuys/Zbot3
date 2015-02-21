@@ -17,7 +17,7 @@ import qualified Data.Text as T
 -- capable of producing new state values based on IRC events. Each service has
 -- a unique name, an initial state value, and the functions to serialize the
 -- service's state to a byte string.
-data Service m a = (Irc m, Collective m) => Worker {
+data Service m a = (Irc m, Collective m) => Service {
     initial     :: a
 ,   serialize   :: a -> Maybe BS.ByteString
 ,   deserialize :: BS.ByteString -> Maybe a
@@ -32,7 +32,7 @@ class Collective m where
     -- containing the state of the corresponding service.
     data Handle :: * -> *
 
-    -- | Register a new service with the
+    -- | Register a new service with the collective.
     registerService :: Monad m => Service m a -> m (Handle a)
 
     -- | Run an operation in a state monad contain the state of the given

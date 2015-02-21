@@ -13,7 +13,6 @@ import Zbot.Core.Service.Types
 import Control.Applicative
 import Control.Monad.State
 import Data.IORef
-import Unsafe.Coerce
 
 
 newtype IOCollective m a = MkIOCollective (StateT [Event -> IOCollective m ()] m a)
@@ -34,10 +33,10 @@ instance MonadIO io => Collective (IOCollective io) where
         modify (++ [handler ioref])
         return $ MkHandle ioref
         where
-            handler ioref event = MkIOCollective $ do
+            handler ioref event = do
                 a <- liftIO $ readIORef ioref
-                a' <- execStateT (unsafeCoerce a) (process service event)
-                liftIO $ writeIORef ioref (unsafeCoerce a')
+                a' <- execStateT (process service event) a
+                liftIO $ writeIORef ioref a'
 
     run (MkHandle ioref) value = do
         a <- MkIOCollective $ liftIO $ readIORef ioref

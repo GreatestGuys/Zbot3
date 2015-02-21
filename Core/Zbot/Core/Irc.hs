@@ -1,11 +1,11 @@
 module Zbot.Core.Irc (
     Irc
-,   Event
+,   Event (..)
 
 ,   nicks
 ,   channels
 ,   whisper
-,   message
+,   shout
 ,   joinChannel
 ,   partChannel
 ,   channelMode
@@ -37,11 +37,11 @@ channels = gets (Map.keys . engineStateChannels)
 
 -- | Send a private message to a given nick.
 whisper :: Irc irc => Nick -> T.Text -> irc ()
-whisper = message
+whisper = shout
 
 -- | Send a message to a given channel.
-message :: Irc irc => Channel -> T.Text -> irc ()
-message channel message = sendMessage BestEffort privMessage
+shout :: Irc irc => Channel -> T.Text -> irc ()
+shout channel message = sendMessage BestEffort privMessage
     where
         privMessage = Message {
             prefix     = Nothing

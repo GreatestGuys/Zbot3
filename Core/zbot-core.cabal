@@ -1,9 +1,9 @@
 name:            zbot-core
 version:         3.0
 license:         MIT
-license-file:    LICENSE
-author:          Will Coster <willcoster@gmail.com>, Jesse Frankely <number.dot.10@gmail.com>
-maintainer:      Will Coster <willcoster@gmail.com>, Jesse Frankely <number.dot.10@gmail.com>
+license-file:    ../LICENSE
+author:          Will Coster <willcoster@gmail.com>, Jesse Frankley <number.dot.10@gmail.com>
+maintainer:      Will Coster <willcoster@gmail.com>, Jesse Frankley <number.dot.10@gmail.com>
 synopsis:        An IRC Bot
 description:     See README.md
 category:        IRC
@@ -23,6 +23,7 @@ library
 
     exposed-modules:
             Zbot.Core.Bot
+        ,   Zbot.Core.Bot.Mock
         ,   Zbot.Core.Irc
         ,   Zbot.Core.Service
 
@@ -35,7 +36,7 @@ library
         ,   Zbot.Core.Service.IO
         ,   Zbot.Core.Service.Types
 
-    ghc-options: -W -Werror
+    ghc-options: -W -Werror -O2
 
     default-extensions:
         OverloadedStrings
