@@ -3,8 +3,9 @@ module Zbot.Service.Roll (
 )   where
 
 import Zbot.Core.Bot
-import Zbot.Core.Irc
 import Zbot.Core.Service
+import Zbot.Extras.Command
+import Zbot.Extras.UnitService
 
 import Control.Monad.State
 import Data.Char
@@ -12,28 +13,15 @@ import System.Random
 
 import qualified Data.Text as T
 
-newtype Roll = Roll ()
+type Roll = ()
 
 -- | A service that will roll a dice when a user messages "!roll".
 roll :: (MonadIO m, Bot m) => Service m Roll
-roll = Service {
-    initial     = Roll ()
-,   serialize   = const Nothing
-,   deserialize = const Nothing
-,   name        = "Zbot.Service.Roll"
-,   process     = processEvent
-}
+roll = unitService "Zbot.Service.Roll" (command "!roll" handleCommand)
 
-processEvent :: (MonadIO m, Bot m) => Event -> StateT Roll m ()
-processEvent (Shout channel _ msg) = lift $ processMessage (shout channel) msg
-processEvent (Whisper nick msg)    = lift $ processMessage (whisper nick) msg
-processEvent _                     = return ()
-
-processMessage :: (MonadIO m, Bot m) => (T.Text -> m ()) -> T.Text -> m ()
-processMessage reply message
-    | "!roll " `T.isPrefixOf` message = rollDice reply sides
-    | otherwise                       = return ()
-    where sides = T.takeWhile isDigit $ T.drop 6 message
+handleCommand :: (MonadIO m, Bot m) => Reply m -> [T.Text] -> StateT Roll m ()
+handleCommand reply [arg] = lift $ rollDice reply (T.takeWhile isDigit arg)
+handleCommand _     _     = return ()
 
 -- This method assumes that range is either null or contains a valid integer
 -- value.
