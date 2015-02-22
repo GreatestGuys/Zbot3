@@ -14,11 +14,16 @@ library
     build-depends:
             base                      >= 4.3      && < 5
         ,   mtl                       >= 2.1
+        ,   regex-base                >= 0.93
+        ,   regex-tdfa                >= 1.2
+        ,   regex-tdfa-text           >= 1.0.0.2
         ,   text                      >= 1.2
         ,   zbot-core                 == 3.0
 
     exposed-modules:
             Zbot.Extras.Command
+            Zbot.Extras.Message
+        ,   Zbot.Extras.Regex
         ,   Zbot.Extras.UnitService
 
     ghc-options: -W -Werror

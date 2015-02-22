@@ -4,6 +4,7 @@ module Zbot.Service.Roll (
 
 import Zbot.Core.Bot
 import Zbot.Core.Service
+import Zbot.Extras.Message
 import Zbot.Extras.Command
 import Zbot.Extras.UnitService
 
@@ -13,13 +14,11 @@ import System.Random
 
 import qualified Data.Text as T
 
-type Roll = ()
-
 -- | A service that will roll a dice when a user messages "!roll".
-roll :: (MonadIO m, Bot m) => Service m Roll
-roll = unitService "Zbot.Service.Roll" (command "!roll" handleCommand)
+roll :: (MonadIO m, Bot m) => Service m ()
+roll = unitService "Zbot.Service.Roll" (onCommand "!roll" handleCommand)
 
-handleCommand :: (MonadIO m, Bot m) => Reply m -> [T.Text] -> StateT Roll m ()
+handleCommand :: (MonadIO m, Bot m) => Reply m -> [T.Text] -> StateT () m ()
 handleCommand reply [arg] = lift $ rollDice reply (T.takeWhile isDigit arg)
 handleCommand _     _     = return ()
 

@@ -42,6 +42,7 @@ runNetworkedBot :: Server -> Port -> Nick -> User -> NetworkedBot () -> IO ()
 runNetworkedBot server port nick user botInit = do
     socket <- Network.connectTo server $ Network.PortNumber (fromIntegral port)
     hSetBuffering socket NoBuffering
+    hSetEncoding socket utf8
     flip evalStateT undefined $
         flip evalStateT (NetworkState socket) $
             runIOCollective $ do

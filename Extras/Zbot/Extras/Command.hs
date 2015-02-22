@@ -1,28 +1,23 @@
+{-# LANGUAGE MultiWayIf #-}
 module Zbot.Extras.Command (
-    Reply
-,   command
+    onCommand
 )   where
 
 import Zbot.Core.Bot
 import Zbot.Core.Irc
+import Zbot.Extras.Message
 
 import Control.Monad.State
 
 import qualified Data.Text as T
 
--- | A function that can be used to send a message to either the channel or the
--- nick who initiated the command.
-type Reply m = T.Text -> m ()
-
-command :: Bot m
-        => T.Text
-        -> (Reply m -> [T.Text] -> StateT s m ())
-        -> Event -> StateT s m ()
-command name handler (Shout channel _ msg)
-    | isCommand name msg = handler (shout channel) (toArgs name msg)
-command name handler (Whisper nick msg)
-    | isCommand name msg = handler (whisper nick) (toArgs name msg)
-command _    _       _   = return ()
+onCommand :: Bot m
+          => T.Text
+          -> (Reply m -> [T.Text] -> StateT s m ())
+          -> Event -> StateT s m ()
+onCommand name handler = onMessage $ \reply msg -> if
+    | isCommand name msg -> handler reply (toArgs name msg)
+    | otherwise          -> return ()
 
 isCommand :: T.Text -> T.Text -> Bool
 isCommand name message = (name `T.append` " ") `T.isPrefixOf` message
