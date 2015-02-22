@@ -12,11 +12,11 @@ spotifyInfix = "open.spotify.com/"
 
 describeSpotify :: Describer
 describeSpotify url
-    | spotifyInfix `T.isInfixOf` url = Just $ scrapeURLAsSearchEngine url info
+    | spotifyInfix `T.isInfixOf` url = Just $ scrapeURLAsDesktop url info
     | otherwise                      = Nothing
 
 info :: Scraper T.Text T.Text
 info = do
-    fullTitle <- text $ ("title" :: T.Text)
-    -- Drop the " on Spotify" from end of the title.
-    return $ T.take (T.length fullTitle - 11) fullTitle
+    title <- text $ Any @: [hasClass "primary-title"]
+    artist <- text $ Any @: [hasClass "secondary-title"]
+    return $ T.concat [title, " by ", artist]
