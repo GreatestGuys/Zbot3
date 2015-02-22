@@ -1,25 +1,25 @@
-name:            zbot-example
+name:            zbot-service-op
 version:         3.0
 license:         MIT
-license-file:    ../LICENSE
+license-file:    ../../LICENSE
 author:          Will Coster <willcoster@gmail.com>, Jesse Frankley <number.dot.10@gmail.com>
 maintainer:      Will Coster <willcoster@gmail.com>, Jesse Frankley <number.dot.10@gmail.com>
-synopsis:        A dice rolling service for Zbot.
+synopsis:        A service that will grant ops.
 description:     See README.md
 category:        IRC
 cabal-version:   >= 1.10
 build-type:      Simple
 
-Executable zbot3
-    Main-Is:        Main.hs
-
+library
     build-depends:
             base                      >= 4.3      && < 5
+        ,   mtl                       >= 2.1
+        ,   text                      >= 1.2
         ,   zbot-core                 == 3.0
-        ,   zbot-cli                  == 3.0
-        ,   zbot-service-describe     == 3.0
-        ,   zbot-service-op           == 3.0
-        ,   zbot-service-roll         == 3.0
+        ,   zbot-extras               == 3.0
+
+    exposed-modules:
+            Zbot.Service.Op
 
     ghc-options: -W -Werror
 
@@ -27,3 +27,5 @@ Executable zbot3
         OverloadedStrings
 
     default-language:    Haskell2010
+
+
