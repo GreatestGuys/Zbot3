@@ -5,8 +5,7 @@ module Zbot.Extras.Message (
 
 import Zbot.Core.Bot
 import Zbot.Core.Irc
-
-import Control.Monad.State
+import Zbot.Core.Service
 
 import qualified Data.Text as T
 
@@ -15,8 +14,8 @@ import qualified Data.Text as T
 type Reply m = T.Text -> m ()
 
 onMessage :: Bot m
-          => (Reply m -> T.Text -> StateT s m ())
-          -> Event -> StateT s m ()
+          => (Reply m -> T.Text -> MonadService s m ())
+          -> Event -> MonadService s m ()
 onMessage handler (Shout channel _ msg) = handler (shout channel) msg
 onMessage handler (Whisper nick msg)    = handler (whisper nick) msg
 onMessage _       _                     = return ()

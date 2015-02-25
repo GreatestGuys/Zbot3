@@ -33,10 +33,10 @@ instance Irc MockBot where
 
 instance Bot MockBot where
 
-runMockBot :: MockBot () -> [Event] -> IO ()
-runMockBot botInit events =
+runMockBot :: FilePath -> MockBot () -> [Event] -> IO ()
+runMockBot dataDir botInit events =
     flip evalStateT undefined $
-        runIOCollective $ do
+        runIOCollective dataDir $ do
             startEngine "mockBot" "mockBot"
             botInit
             mapM_ processEvent events

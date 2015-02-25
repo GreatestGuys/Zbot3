@@ -14,11 +14,14 @@ import Zbot.Extras.Regex
 import Zbot.Extras.UnitService
 
 import Control.Applicative
-import Control.Monad.State
 import Network.Curl.Opts
 import Network.Curl.Download
 import Text.HTML.Scalpel
 import Text.HTML.TagSoup
+
+import Control.Monad
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.Trans.Class (lift)
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T

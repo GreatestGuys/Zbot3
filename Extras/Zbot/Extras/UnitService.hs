@@ -6,11 +6,9 @@ import Zbot.Core.Bot
 import Zbot.Core.Irc
 import Zbot.Core.Service
 
-import Control.Monad.State
-
 import qualified Data.Text as T
 
-unitService :: Bot m => T.Text -> (Event -> StateT () m ()) -> Service m ()
+unitService :: Bot m => T.Text -> (Event -> MonadService () m ()) -> Service m ()
 unitService name process = Service {
         initial     = ()
     ,   serialize   = const Nothing

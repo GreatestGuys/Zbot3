@@ -5,16 +5,15 @@ module Zbot.Extras.Command (
 
 import Zbot.Core.Bot
 import Zbot.Core.Irc
+import Zbot.Core.Service
 import Zbot.Extras.Message
-
-import Control.Monad.State
 
 import qualified Data.Text as T
 
 onCommand :: Bot m
           => T.Text
-          -> (Reply m -> [T.Text] -> StateT s m ())
-          -> Event -> StateT s m ()
+          -> (Reply m -> [T.Text] -> MonadService s m ())
+          -> Event -> MonadService s m ()
 onCommand name handler = onMessage $ \reply msg -> if
     | isCommand name msg -> handler reply (toArgs name msg)
     | otherwise          -> return ()

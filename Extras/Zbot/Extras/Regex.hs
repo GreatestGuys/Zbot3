@@ -4,9 +4,9 @@ module Zbot.Extras.Regex (
 
 import Zbot.Core.Bot
 import Zbot.Core.Irc
+import Zbot.Core.Service
 import Zbot.Extras.Message
 
-import Control.Monad.State
 import Text.Regex.TDFA
 import Text.Regex.TDFA.Text ()
 
@@ -16,8 +16,8 @@ type Pattern = T.Text
 
 onRegex :: Bot m
         => Pattern
-        -> (Reply m -> T.Text -> StateT s m ())
-        -> Event -> StateT s m ()
+        -> (Reply m -> T.Text -> MonadService s m ())
+        -> Event -> MonadService s m ()
 onRegex pattern action =
         onMessage $ \reply -> mapM_ (action reply) . concat . match regex
     where

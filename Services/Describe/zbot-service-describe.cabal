@@ -19,8 +19,9 @@ library
         ,   download-curl             >= 0.1.4
         ,   mtl                       >= 2.1
         ,   scalpel                   >= 0.1.1
-        ,   text                      >= 1.2
         ,   tagsoup                   >= 0.12
+        ,   text                      >= 1.2
+        ,   transformers              >= 0.3
         ,   zbot-core                 == 3.0
         ,   zbot-extras               == 3.0
 

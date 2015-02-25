@@ -14,6 +14,7 @@ data Options = Options {
         ,   portFlag     ::  Port
         ,   nickFlag     ::  Nick
         ,   channelsFlag ::  [Channel]
+        ,   dataDirFlag  ::  FilePath
     }
 
 textOption :: Mod OptionFields String -> Parser T.Text
@@ -34,6 +35,8 @@ optionsParserInfo = info optionsParser meta
                 <> help "The nick that the bot should connect as")
             <*> some (textOption (long "channel"
                 <> help "The channels that the bot should join"))
+            <*> strOption (long "data"
+                <> help "The directory to store service data files in")
 
         meta = fullDesc
              <> header "zbot - An IRC bot framework."
@@ -44,5 +47,6 @@ zbotMain init = execParser optionsParserInfo >>= \options ->
         (serverFlag options)
         (portFlag options)
         (nickFlag options)
-        (nickFlag options)
+        (nickFlag options)  -- Use the same value for user.
+        (dataDirFlag options)
         (mapM_ joinChannel (channelsFlag options) >> init)

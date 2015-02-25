@@ -16,6 +16,7 @@ library
         ,   mtl                       >= 2.1
         ,   random                    >= 1.0
         ,   text                      >= 1.2
+        ,   transformers              >= 0.3
         ,   zbot-core                 == 3.0
         ,   zbot-extras               == 3.0
 

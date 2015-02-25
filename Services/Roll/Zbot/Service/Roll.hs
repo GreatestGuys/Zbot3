@@ -8,7 +8,9 @@ import Zbot.Extras.Message
 import Zbot.Extras.Command
 import Zbot.Extras.UnitService
 
-import Control.Monad.State
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.Trans.Class (lift)
+
 import Data.Char
 import System.Random
 
@@ -18,7 +20,8 @@ import qualified Data.Text as T
 roll :: (MonadIO m, Bot m) => Service m ()
 roll = unitService "Zbot.Service.Roll" (onCommand "!roll" handleCommand)
 
-handleCommand :: (MonadIO m, Bot m) => Reply m -> [T.Text] -> StateT () m ()
+handleCommand :: (MonadIO m, Bot m)
+              => Reply m -> [T.Text] -> MonadService () m ()
 handleCommand reply [arg] = lift $ rollDice reply (T.takeWhile isDigit arg)
 handleCommand _     _     = return ()
 

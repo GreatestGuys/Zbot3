@@ -7,7 +7,7 @@ import Zbot.Core.Irc
 import Zbot.Core.Service
 import Zbot.Extras.UnitService
 
-import Control.Monad.State
+import Control.Monad.Trans.Class (lift)
 
 import qualified Data.Text as T
 
@@ -15,21 +15,21 @@ import qualified Data.Text as T
 op :: Bot m => Service m ()
 op = unitService "Zbot.Service.Op" handler
 
-handler :: Bot m => Event -> StateT () m ()
+handler :: Bot m => Event -> MonadService () m ()
 handler event = mapM_ ($ event) [ding, ascend, oprah]
 
-ding :: Bot m => Event -> StateT () m ()
+ding :: Bot m => Event -> MonadService () m ()
 ding (Shout channel nick "!ding") = lift $ addChannelMode channel [Op nick]
 ding _                            = return()
 
-ascend :: Bot m => Event -> StateT () m ()
+ascend :: Bot m => Event -> MonadService () m ()
 ascend (Shout channel nick "!ascend") = lift $ do
     addChannelMode channel [Op nick]
     shout channel $
         T.concat ["Welcome to the ranks of the Ascended, Brother ", nick, "."]
 ascend _                              = return()
 
-oprah :: Bot m => Event -> StateT () m ()
+oprah :: Bot m => Event -> MonadService () m ()
 oprah (Shout channel _ "!oprah") = lift $ do
     allNicks <- nicks channel
     mapM_ giveOp allNicks

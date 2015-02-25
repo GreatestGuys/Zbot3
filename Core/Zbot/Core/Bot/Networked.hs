@@ -38,14 +38,20 @@ instance Irc NetworkedBot where
 
 instance Bot NetworkedBot where
 
-runNetworkedBot :: Server -> Port -> Nick -> User -> NetworkedBot () -> IO ()
-runNetworkedBot server port nick user botInit = do
+runNetworkedBot :: Server
+                -> Port
+                -> Nick
+                -> User
+                -> FilePath
+                -> NetworkedBot ()
+                -> IO ()
+runNetworkedBot server port nick user dataDir botInit = do
     socket <- Network.connectTo server $ Network.PortNumber (fromIntegral port)
     hSetBuffering socket NoBuffering
     hSetEncoding socket utf8
     flip evalStateT undefined $
         flip evalStateT (NetworkState socket) $
-            runIOCollective $ do
+            runIOCollective dataDir $ do
                 startEngine nick user
                 botInit
                 forever processInput
