@@ -44,7 +44,7 @@ foldLogBackward f initial path = withLogFile path $ \(ptr, size) -> do
     let endOfFile = plusPtr ptr size
     loop ptr endOfFile initial
     where
-        isSOF ptr sof = plusPtr ptr (0 - minEntrySize) <= sof
+        isSOF ptr sof = plusPtr ptr (0 - minEntrySize) < sof
 
         loop startOfFile ptr accum | isSOF ptr startOfFile = return accum
                                    | otherwise             = do

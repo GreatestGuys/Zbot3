@@ -21,9 +21,8 @@ roll :: (MonadIO m, Bot m) => Service m ()
 roll = unitService "Zbot.Service.Roll" (onCommand "!roll" handleCommand)
 
 handleCommand :: (MonadIO m, Bot m)
-              => Reply m -> [T.Text] -> MonadService () m ()
-handleCommand reply [arg] = lift $ rollDice reply (T.takeWhile isDigit arg)
-handleCommand _     _     = return ()
+              => Reply m -> T.Text -> MonadService () m ()
+handleCommand reply arg = lift $ rollDice reply (T.takeWhile isDigit arg)
 
 -- This method assumes that range is either null or contains a valid integer
 -- value.

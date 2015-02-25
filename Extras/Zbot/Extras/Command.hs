@@ -12,7 +12,7 @@ import qualified Data.Text as T
 
 onCommand :: Bot m
           => T.Text
-          -> (Reply m -> [T.Text] -> MonadService s m ())
+          -> (Reply m -> T.Text -> MonadService s m ())
           -> Event -> MonadService s m ()
 onCommand name handler = onMessage $ \reply msg -> if
     | isCommand name msg -> handler reply (toArgs name msg)
@@ -20,6 +20,7 @@ onCommand name handler = onMessage $ \reply msg -> if
 
 isCommand :: T.Text -> T.Text -> Bool
 isCommand name message = (name `T.append` " ") `T.isPrefixOf` message
+                       || name == message
 
-toArgs :: T.Text -> T.Text -> [T.Text]
-toArgs name = T.words . T.drop (T.length name + 1)
+toArgs :: T.Text -> T.Text -> T.Text
+toArgs name = T.drop (T.length name + 1)
