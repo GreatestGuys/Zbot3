@@ -8,6 +8,7 @@ import Text.HTML.Scalpel
 
 import qualified Data.Text as T
 
+
 twitterInfixes = ["twitter.com/", "/status/"]
 
 infixesOf :: [T.Text] -> T.Text -> Bool

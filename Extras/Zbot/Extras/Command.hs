@@ -10,6 +10,7 @@ import Zbot.Extras.Message
 
 import qualified Data.Text as T
 
+
 onCommand :: Bot m
           => T.Text
           -> (Reply m -> T.Text -> MonadService s m ())

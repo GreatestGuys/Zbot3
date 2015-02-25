@@ -9,6 +9,7 @@ import Options.Applicative
 
 import qualified Data.Text as T
 
+
 data Options = Options {
             serverFlag   ::  Server
         ,   portFlag     ::  Port
@@ -35,8 +36,7 @@ optionsParserInfo = info optionsParser meta
                 <> help "The nick that the bot should connect as")
             <*> some (textOption (long "channel"
                 <> help "The channels that the bot should join"))
-            <*> strOption (long "data"
-                <> help "The directory to store service data files in")
+            <*> strOption (long "data" <> help "The directory to store service data files in")
 
         meta = fullDesc
              <> header "zbot - An IRC bot framework."

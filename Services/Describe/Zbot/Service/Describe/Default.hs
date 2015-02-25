@@ -9,6 +9,7 @@ import Text.HTML.Scalpel
 
 import qualified Data.Text as T
 
+
 describeDefault :: Describer
 describeDefault url= Just $ scrapeURLAsSearchEngine url description
 

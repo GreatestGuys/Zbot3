@@ -8,6 +8,7 @@ import Text.HTML.Scalpel
 
 import qualified Data.Text as T
 
+
 spotifyInfix = "open.spotify.com/"
 
 describeSpotify :: Describer

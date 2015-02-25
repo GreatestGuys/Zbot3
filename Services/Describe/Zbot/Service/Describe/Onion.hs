@@ -8,6 +8,7 @@ import Text.HTML.Scalpel
 
 import qualified Data.Text as T
 
+
 onionInfix = "theonion.com/articles/"
 
 describeOnion :: Describer

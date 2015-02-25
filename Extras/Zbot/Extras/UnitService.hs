@@ -8,6 +8,7 @@ import Zbot.Core.Service
 
 import qualified Data.Text as T
 
+
 unitService :: Bot m => T.Text -> (Event -> MonadService () m ()) -> Service m ()
 unitService name process = Service {
         initial     = ()

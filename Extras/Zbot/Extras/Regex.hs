@@ -12,6 +12,7 @@ import Text.Regex.TDFA.Text ()
 
 import qualified Data.Text as T
 
+
 type Pattern = T.Text
 
 onRegex :: Bot m

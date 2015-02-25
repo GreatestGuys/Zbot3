@@ -26,6 +26,7 @@ import Control.Monad.Trans.Class (lift)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
+
 -- | A Describer is a function that takes a message and optionally returns a
 -- description of that message.
 type Describer = T.Text -> Maybe (IO (Maybe T.Text))

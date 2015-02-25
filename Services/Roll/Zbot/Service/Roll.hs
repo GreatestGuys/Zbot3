@@ -16,6 +16,7 @@ import System.Random
 
 import qualified Data.Text as T
 
+
 -- | A service that will roll a dice when a user messages "!roll".
 roll :: (MonadIO m, Bot m) => Service m ()
 roll = unitService "Zbot.Service.Roll" (onCommand "!roll" handleCommand)

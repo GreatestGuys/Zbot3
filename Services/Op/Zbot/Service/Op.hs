@@ -11,6 +11,7 @@ import Control.Monad.Trans.Class (lift)
 
 import qualified Data.Text as T
 
+
 -- | A service that will grant ops to users on the current channel.
 op :: Bot m => Service m ()
 op = unitService "Zbot.Service.Op" handler

@@ -13,6 +13,7 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
+
 describeYouTube :: Describer
 describeYouTube url
     | isYouTubeLink url = Just $ scrapeURLAsMobile (toEmbedLink url) info
