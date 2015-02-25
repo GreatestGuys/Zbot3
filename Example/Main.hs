@@ -9,8 +9,10 @@ import Zbot.Service.Describe.Onion
 import Zbot.Service.Describe.Spotify
 import Zbot.Service.Describe.Twitter
 import Zbot.Service.Describe.YouTube
+import Zbot.Service.History
 import Zbot.Service.Op
 import Zbot.Service.Roll
+
 
 main = zbotMain $ do
     registerService_ $ describe [
@@ -20,5 +22,6 @@ main = zbotMain $ do
         ,   describeYouTube
         ,   describeDefault
         ]
+    history >>= registerService_
     registerService_ op
     registerService_ roll

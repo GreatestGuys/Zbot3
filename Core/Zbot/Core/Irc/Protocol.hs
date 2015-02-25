@@ -99,13 +99,13 @@ parseCommand :: Atto.Parser T.Text
 parseCommand = parseTextEndedBy1 ' '
 
 parseParams :: Atto.Parser [T.Text]
-parseParams = Atto.many' (T.cons <$> Atto.notChar ':' <*> parseTextEndedBy ' ')
+parseParams = param `Atto.sepBy'` Atto.char ' '
+    where param = T.cons <$> Atto.notChar ':' <*> Atto.takeWhile notTerminator
+          notTerminator = (&&) <$> (/= ' ') <*> (/= '\x0d')
 
 parseTrailing :: Atto.Parser T.Text
-parseTrailing = Atto.char ':' >> Atto.takeWhile (/= '\x0d')
-
-parseTextEndedBy :: Char -> Atto.Parser T.Text
-parseTextEndedBy char = Atto.takeWhile (/= char) <* Atto.char char
+parseTrailing =
+    Atto.takeWhile (== ' ') >> Atto.char ':' >> Atto.takeWhile (/= '\x0d')
 
 parseTextEndedBy1 :: Char -> Atto.Parser T.Text
 parseTextEndedBy1 char = Atto.takeWhile1 (/= char) <* Atto.char char

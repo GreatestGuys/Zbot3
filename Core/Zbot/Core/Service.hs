@@ -1,5 +1,5 @@
 module Zbot.Core.Service (
-    Collective (registerService, run)
+    Collective (registerService, run, sandboxedFilePath)
 ,   Handle
 ,   Service (..)
 ,   MonadService

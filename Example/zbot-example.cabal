@@ -18,6 +18,7 @@ Executable zbot3
         ,   zbot-core                 == 3.0
         ,   zbot-cli                  == 3.0
         ,   zbot-service-describe     == 3.0
+        ,   zbot-service-history      == 3.0
         ,   zbot-service-op           == 3.0
         ,   zbot-service-roll         == 3.0
 

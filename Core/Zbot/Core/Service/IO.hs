@@ -20,6 +20,7 @@ import System.FilePath ((</>))
 import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Data.ByteString.Base16 as Hex
 
 
 data IOCollectiveMeta m = IOCollectiveMeta {
@@ -42,7 +43,10 @@ instance MonadIO io => Collective (IOCollective io) where
     data Handle a = MkHandle (IORef (ServiceMeta a))
 
     registerService service = MkIOCollective $ do
+        dataDir <- gets metaDataDir
+        let serviceDataDir = dataDir </> normalize (name service)
         let serviceMeta = ServiceMeta (initial service) (name service)
+        liftIO $ createDirectoryIfMissing True serviceDataDir
         ioref <- liftIO $ newIORef serviceMeta
         modify $ addHandler (makeHandler ioref)
         return $ MkHandle ioref
@@ -68,12 +72,13 @@ instance MonadIO io => Collective (IOCollective io) where
         dataDir <- lift $ MkIOCollective $ gets metaDataDir
         serviceName <- gets metaName
         return $ dataDir </> normalize serviceName </> normalize fileName
-        where
-            normalize name = concat [
-                    filter isAlphaNum $ T.unpack name
-                ,   "-"
-                ,   T.unpack $ T.decodeUtf8 $ SHA256.hash $ T.encodeUtf8 name
-                ]
+
+normalize :: T.Text -> FilePath
+normalize name = concat [
+        filter isAlphaNum $ T.unpack name
+    ,   "-"
+    ,   T.unpack $ T.decodeUtf8 $ Hex.encode $ SHA256.hash $ T.encodeUtf8 name
+    ]
 
 runIOCollective :: MonadIO io => FilePath -> IOCollective io a -> io a
 runIOCollective dataDir (MkIOCollective value) = do
