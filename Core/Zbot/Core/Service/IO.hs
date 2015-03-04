@@ -14,9 +14,11 @@ import Control.Applicative
 import Control.Monad.State
 import Data.Char (isAlphaNum)
 import Data.IORef
+import Data.Time.Clock
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath ((</>))
 
+import qualified Control.Monad.Catch as Catch
 import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -30,7 +32,7 @@ data IOCollectiveMeta m = IOCollectiveMeta {
 
 newtype IOCollective m a = MkIOCollective
                            (StateT (IOCollectiveMeta m) m a)
-    deriving (Monad, Functor, Applicative)
+    deriving (Monad, Functor, Applicative, Catch.MonadCatch, Catch.MonadThrow)
 
 instance MonadIO io => MonadIO (IOCollective io) where
     liftIO ioValue = MkIOCollective $ liftIO ioValue
@@ -38,7 +40,7 @@ instance MonadIO io => MonadIO (IOCollective io) where
 instance MonadTrans IOCollective where
     lift value = MkIOCollective $ lift value
 
-instance MonadIO io => Collective (IOCollective io) where
+instance (Catch.MonadCatch io, MonadIO io) => Collective (IOCollective io) where
 
     data Handle a = MkHandle (IORef (ServiceMeta a))
 
@@ -54,11 +56,28 @@ instance MonadIO io => Collective (IOCollective io) where
             addHandler handler meta = meta {
                     metaHandlers = metaHandlers meta ++ [handler]
                 }
-            makeHandler ioref event = do
+            makeHandler ioref event = suppressErrors event $ do
                 a <- liftIO $ readIORef ioref
                 let (MkMonadService action) = (process service event)
                 a' <- execStateT action a
                 liftIO $ writeIORef ioref a'
+
+            suppressErrors event = flip Catch.catch (errorHandler event)
+            errorHandler :: MonadIO m => Event -> Catch.SomeException -> m ()
+            errorHandler event exception = liftIO $ do
+                let marker c = putStrLn $ replicate 80 c
+                let center msg = putStrLn $ T.unpack $ T.center 80 ' ' msg
+                now <- getCurrentTime
+                marker '='
+                center "BEGIN ERROR REPORT"
+                marker '-'
+                putStrLn $ "Service:   " ++ T.unpack (name service)
+                putStrLn $ "Event:     " ++ show event
+                putStrLn $ "Timestamp: " ++ show now
+                putStrLn $ "Exception: " ++ show exception
+                marker '-'
+                center "END ERROR REPORT"
+                marker '='
 
     run (MkHandle ioref) (MkMonadService value) = do
         a <- MkIOCollective $ liftIO $ readIORef ioref

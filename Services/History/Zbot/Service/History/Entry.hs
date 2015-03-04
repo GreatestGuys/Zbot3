@@ -103,7 +103,9 @@ putWord64 :: Word64 -> Binary.Put
 putWord64 = Binary.put
 
 getText :: Binary.Get T.Text
-getText = (T.decodeUtf8 . LBS.toStrict) <$> Binary.get
+getText = do
+    possiblyText <- (T.decodeUtf8' . LBS.toStrict) <$> Binary.get
+    either (const mzero) return possiblyText
 
 putText :: T.Text -> Binary.Put
 putText = Binary.put . T.encodeUtf8

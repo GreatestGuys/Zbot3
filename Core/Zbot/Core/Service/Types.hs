@@ -16,6 +16,7 @@ import Zbot.Core.Irc
 import Control.Applicative
 import Control.Monad.State
 
+import qualified Control.Monad.Catch as Catch
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 
@@ -38,7 +39,7 @@ data ServiceMeta a = ServiceMeta {
     }
 
 newtype MonadService s m b = MkMonadService (StateT (ServiceMeta s) m b)
-    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO)
+    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, Catch.MonadCatch, Catch.MonadThrow)
 
 instance (Applicative m, Monad m) => MonadState s (MonadService s m) where
     get = MkMonadService $ metaValue <$> get
