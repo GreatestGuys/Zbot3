@@ -13,6 +13,7 @@ import Zbot.Service.Grep
 import Zbot.Service.History
 import Zbot.Service.Op
 import Zbot.Service.Roll
+import Zbot.Service.Uptime
 
 
 main = zbotMain $ do
@@ -28,3 +29,4 @@ main = zbotMain $ do
     registerService_ $ grep historyHandle
     registerService_ op
     registerService_ roll
+    uptime >>= registerService_
