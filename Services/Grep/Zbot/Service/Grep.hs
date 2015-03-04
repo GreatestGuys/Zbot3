@@ -22,11 +22,11 @@ grep :: (MonadIO m, Bot m) => Handle History -> Service m ()
 grep historyHandle =
     unitService "Zbot.Service.Grep" (onCommand "!grep" grepCommand)
     where
-        grepCommand reply query = lift $ do
+        grepCommand reply args = lift $ do
             (result, _) <- foldHistoryBackward
                             historyHandle
-                            (matchFirst query)
-                            (Nothing, 0)
+                            (match (parse args defaultOptions))
+                            initialGrepResult
             maybe (return ()) reply result
 
         matchFirst query time (Shout channel nick msg) (Nothing, i)
@@ -37,6 +37,46 @@ grep historyHandle =
 
         next i = i `seq` i + 1
 
-        describe time channel nick message = Just $ T.concat [
-                T.pack $ show time, " " , channel, " ", nick, "> ", message
-            ]
+data GrepOptions = GrepOptions {
+        context :: Int
+    ,   matches :: Int
+    ,   nick    :: Maybe Nick
+    ,   channel :: Maybe Channel
+    ,   query   :: String
+    }
+
+data GrepResult = GrepResult {
+        isFirst    :: Bool
+    ,   numMatched :: Int
+    ,   results    :: [[T.Text]]
+    }
+
+defaultOptions :: GrepOptions
+defaultOptions = GrepOptions {
+        context = ,
+    ,   matches = 1
+    ,   nick = Nothing
+    ,   channel = Nothing
+    ,   query = Nothing
+    }
+
+parse :: T.Text -> GrepOptions -> GrepOptions
+parse args options
+    | ("-m", Just m)  <- (flag, intValue)  = parse rest $ options {matches = m}
+    | ("-c", Just c)  <- (flag, intValue)  = parse rest $ options {context = c}
+    | ("-C", c)       <- (flag, justValue) = parse rest $ options {channel = c}
+    | ("-n", n)       <- (flag, justValue) = parse rest $ options {nick = n}
+    | otherwise                            = options {query = args}
+    where
+        (flag, flagRest) = T.breakOn " " args
+        (value, valueRest) = T.breakOn " "  $ T.stripStart flagRest
+        rest = T.stripStart valueRest
+        intValue = readMaybe $ T.unpack value
+        justValue = Just value
+
+match :: GrepOptions -> UTCTime -> Event -> GrepResult -> GrepResult
+
+describe :: UTCTime -> Channel -> Nick -> T.Text -> T.Text
+describe time channel nick message = T.concat [
+        T.pack $ show time, " " , channel, " ", nick, "> ", message
+    ]
