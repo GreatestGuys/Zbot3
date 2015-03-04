@@ -58,14 +58,16 @@ scrapeURLAsDesktop = scrapeURLAsUA "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537
 
 scrapeURLAsUA :: String -> T.Text -> Scraper T.Text a -> IO (Maybe a)
 scrapeURLAsUA userAgent textUrl scraper = do
-        eitherTags <- downloadAsTags url
-        case eitherTags of
-            Left _     -> return Nothing
-            Right tags -> return $ scrape scraper (map (fmap T.decodeUtf8) tags)
+        maybeTags <- downloadAsTags url
+        return (maybeTags >>= scrape scraper)
     where
         url = T.unpack textUrl
         options = [
                 CurlUserAgent userAgent
             ,   CurlFollowLocation True
             ]
-        downloadAsTags url = fmap parseTags <$> openURIWithOpts options url
+        downloadAsTags url = do
+            bs <- maybeRight <$> openURIWithOpts options url
+            return $ parseTags <$> (bs >>= maybeRight . T.decodeUtf8')
+        maybeRight (Right a) = Just a
+        maybeRight _         = Nothing
