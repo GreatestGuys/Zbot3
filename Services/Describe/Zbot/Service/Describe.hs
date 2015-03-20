@@ -34,7 +34,7 @@ type Describer = T.Text -> Maybe (IO (Maybe T.Text))
 describe :: (MonadIO m, Bot m) => [Describer] -> Service m ()
 describe describers = unitService "Zbot.Service.Describe" handler
     where
-        linkPattern = "https?://[^ ]*"
+        linkPattern = "https?://[^ #]*"
 
         handler = onRegex linkPattern describeLinks
 
