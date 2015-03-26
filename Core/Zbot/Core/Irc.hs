@@ -48,13 +48,15 @@ whisper = shout
 
 -- | Send a message to a given channel.
 shout :: Irc irc => Channel -> T.Text -> irc ()
-shout channel message = sendMessage BestEffort privMessage
+shout channel message = mapM_ sendPrivMsg chunks
     where
-        privMessage = Message {
+        sendPrivMsg = (sendMessage BestEffort . toPrivMessage)
+        chunks = T.chunksOf (512 - 128) message
+        toPrivMessage msg = Message {
             prefix     = Nothing
         ,   command    = "PRIVMSG"
         ,   parameters = [channel]
-        ,   trailing   = Just message
+        ,   trailing   = Just msg
         }
 
 -- | Join an IRC channel.

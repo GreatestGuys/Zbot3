@@ -2,6 +2,7 @@ module Zbot.Service.Describe.Spotify (
     describeSpotify
 ) where
 
+import Zbot.Extras.Scrape
 import Zbot.Service.Describe
 
 import Text.HTML.Scalpel

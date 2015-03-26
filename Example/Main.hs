@@ -3,6 +3,7 @@ where
 
 import Zbot.Cli
 import Zbot.Core.Service
+import Zbot.Service.Define
 import Zbot.Service.Describe
 import Zbot.Service.Describe.Default
 import Zbot.Service.Describe.Onion
@@ -19,6 +20,7 @@ import Zbot.Service.Uptime
 main = zbotMain $ do
     historyHandle <- history >>= registerService
 
+    registerService_ $ define
     registerService_ $ describe [
             describeOnion
         ,   describeSpotify

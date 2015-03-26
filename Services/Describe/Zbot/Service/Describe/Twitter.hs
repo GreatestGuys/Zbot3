@@ -2,6 +2,7 @@ module Zbot.Service.Describe.Twitter (
     describeTwitter
 ) where
 
+import Zbot.Extras.Scrape
 import Zbot.Service.Describe
 
 import Text.HTML.Scalpel

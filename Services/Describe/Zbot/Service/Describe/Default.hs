@@ -2,6 +2,7 @@ module Zbot.Service.Describe.Default (
     describeDefault
 ) where
 
+import Zbot.Extras.Scrape
 import Zbot.Service.Describe
 
 import Control.Applicative
