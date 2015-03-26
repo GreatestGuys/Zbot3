@@ -1,6 +1,7 @@
 ./Describe
 ./Grep
 ./History
+./NGram
 ./Op
 ./Roll
 ./Uptime
