@@ -3,5 +3,6 @@
 ./Grep
 ./History
 ./Op
+./Replace
 ./Roll
 ./Uptime
