@@ -50,7 +50,7 @@ whisper = shout
 shout :: Irc irc => Channel -> T.Text -> irc ()
 shout channel message = mapM_ sendPrivMsg chunks
     where
-        sendPrivMsg = (sendMessage BestEffort . toPrivMessage)
+        sendPrivMsg = sendMessage BestEffort . toPrivMessage
         chunks = T.chunksOf (512 - 128) message
         toPrivMessage msg = Message {
             prefix     = Nothing

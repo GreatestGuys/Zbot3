@@ -10,6 +10,8 @@ module Zbot.Core.Service (
 import Zbot.Core.Service.IO ()
 import Zbot.Core.Service.Types
 
+import Control.Monad
+
 
 registerService_ :: (Monad m, Collective m) => Service m a -> m ()
-registerService_ service = registerService service >> return ()
+registerService_ service = void (registerService service)

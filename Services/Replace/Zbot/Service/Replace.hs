@@ -39,7 +39,7 @@ replace history = unitService "Zbot.Service.Replace" handler
 
 -- | Split a string on all non-escaped back slashes.
 split :: T.Text -> [T.Text]
-split s = splitHelper "" s
+split = splitHelper ""
     where
         splitHelper acc s
             | T.null s               = [acc]
@@ -58,4 +58,4 @@ replaceOne :: T.Text -> T.Text -> T.Text -> T.Text
 replaceOne from to t
     | T.null from || T.null t = t
     | from `T.isPrefixOf` t   = to <> T.drop (T.length from) t
-    | otherwise               = (T.take 1 t) <> replaceOne from to (T.drop 1 t)
+    | otherwise               = T.take 1 t <> replaceOne from to (T.drop 1 t)

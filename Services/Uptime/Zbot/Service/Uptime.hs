@@ -20,7 +20,7 @@ import qualified Data.Text as T
 -- | A service that reports the bot's uptime.
 uptime :: (MonadIO io, MonadIO m, Bot m) => io (Service m ())
 uptime = do
-    bootTime <- liftIO $ getCurrentTime
+    bootTime <- liftIO getCurrentTime
     return $ unitService
         "Zbot.Service.Uptime"
         (onCommand "!uptime" (handler bootTime))
@@ -28,7 +28,7 @@ uptime = do
 handler :: (MonadIO m, Bot m)
         => UTCTime -> Reply m -> T.Text -> MonadService () m ()
 handler bootTime reply _ = do
-    now <- liftIO $ getCurrentTime
+    now <- liftIO getCurrentTime
     let up = diffUTCTime now bootTime
     lift $ reply $ T.pack $ pretty up
 

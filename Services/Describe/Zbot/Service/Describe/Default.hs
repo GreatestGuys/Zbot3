@@ -36,4 +36,4 @@ metaTwitterDescription :: Scraper T.Text T.Text
 metaTwitterDescription = scrapeMetaTag "twitter:description"
 
 title :: Scraper T.Text T.Text
-title = text $ ("title" :: T.Text)
+title = text ("title" :: T.Text)

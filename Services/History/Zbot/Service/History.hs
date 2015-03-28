@@ -21,8 +21,8 @@ newtype History = MkHistory ()
 
 -- | A service that will keep track of all IRC events that Zbot ever receives.
 history :: (MonadIO io, MonadIO m, Bot m) => io (Service m History)
-history = do
-    return $ Service {
+history =
+    return Service {
             initial     = MkHistory ()
         ,   serialize   = const Nothing
         ,   deserialize = const Nothing

@@ -19,6 +19,6 @@ describeOnion url
 
 title :: Scraper T.Text T.Text
 title = do
-    fullTitle <- text $ ("title" :: T.Text)
+    fullTitle <- text ("title" :: T.Text)
     let shortTitle = T.strip $ T.takeWhile ('|' /=) fullTitle
     return $ "Breaking News: " `T.append` shortTitle

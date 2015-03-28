@@ -30,11 +30,11 @@ toEmbedLink url
     | "watch?v=" `T.isInfixOf` url = T.replace "watch?v=" "embed/" url
     | otherwise                    =
         let (_, videoId) = T.breakOn "v=" url
-        in "http://www.youtube.com/embed/" `T.append` (T.drop 2 videoId)
+        in "http://www.youtube.com/embed/" `T.append` T.drop 2 videoId
 
 info :: Scraper T.Text T.Text
 info = do
-    script <- T.concat <$> (texts $ ("body" :: T.Text) // ("script" :: T.Text))
+    script <- T.concat <$> (texts ("body" :: T.Text) // ("script" :: T.Text))
     case decode $ extractJson script of
         Nothing                                       -> empty
         Just (YouTubeInfo title seconds views rating) -> return $ T.concat [
@@ -47,7 +47,7 @@ info = do
             ]
 
 extractJson :: T.Text -> LBS.ByteString
-extractJson script = LBS.fromStrict $ T.encodeUtf8 $ json
+extractJson script = LBS.fromStrict $ T.encodeUtf8 json
     where
         jsonPrefix           = "yt.setConfig('PLAYER_CONFIG',"
         (_, jsonWithGarbage) = T.breakOn jsonPrefix script

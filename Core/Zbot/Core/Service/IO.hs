@@ -58,7 +58,7 @@ instance (Catch.MonadCatch io, MonadIO io) => Collective (IOCollective io) where
                 }
             makeHandler ioref event = suppressErrors event $ do
                 a <- liftIO $ readIORef ioref
-                let (MkMonadService action) = (process service event)
+                let (MkMonadService action) = process service event
                 a' <- execStateT action a
                 liftIO $ writeIORef ioref a'
 
@@ -85,7 +85,7 @@ instance (Catch.MonadCatch io, MonadIO io) => Collective (IOCollective io) where
         MkIOCollective $ liftIO $ writeIORef ioref a'
         return result
 
-    processEvent event = MkIOCollective get >>= (mapM_ ($ event)) . metaHandlers
+    processEvent event = MkIOCollective get >>= mapM_ ($ event) . metaHandlers
 
     sandboxedFilePath fileName = MkMonadService $ do
         dataDir <- lift $ MkIOCollective $ gets metaDataDir

@@ -20,7 +20,7 @@ import Zbot.Service.Uptime
 main = zbotMain $ do
     historyHandle <- history >>= registerService
 
-    registerService_ $ define
+    registerService_ define
     registerService_ $ describe [
             describeOnion
         ,   describeSpotify
@@ -30,5 +30,6 @@ main = zbotMain $ do
         ]
     registerService_ $ grep historyHandle
     registerService_ op
+    registerService_ $ replace historyHandle
     registerService_ roll
     uptime >>= registerService_

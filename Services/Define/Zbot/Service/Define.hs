@@ -72,7 +72,7 @@ replace old new source = pack $ r (unpack old) (unpack new) (unpack source)
         r []  _   source  = source
 
         r old new source
-            | isPrefixOf (map toLower old) (map toLower source)
+            | map toLower old `isPrefixOf` map toLower source
             = new ++ r old new (drop (length old) source)
 
         r old new (x:xs)  = x : r old new xs
