@@ -13,6 +13,7 @@ import Zbot.Service.Describe.YouTube
 import Zbot.Service.Grep
 import Zbot.Service.History
 import Zbot.Service.Op
+import Zbot.Service.Replace
 import Zbot.Service.Roll
 import Zbot.Service.Uptime
 

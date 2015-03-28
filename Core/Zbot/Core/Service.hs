@@ -13,5 +13,5 @@ import Zbot.Core.Service.Types
 import Control.Monad
 
 
-registerService_ :: (Monad m, Collective m) => Service m a -> m ()
+registerService_ :: (Functor m, Monad m, Collective m) => Service m a -> m ()
 registerService_ service = void (registerService service)
