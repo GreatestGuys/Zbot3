@@ -15,6 +15,7 @@ import Zbot.Service.History
 import Zbot.Service.Op
 import Zbot.Service.Replace
 import Zbot.Service.Roll
+import Zbot.Service.Seen
 import Zbot.Service.Uptime
 
 
@@ -33,4 +34,5 @@ main = zbotMain $ do
     registerService_ op
     registerService_ $ replace historyHandle
     registerService_ roll
+    registerService_ $ seen historyHandle
     uptime >>= registerService_
