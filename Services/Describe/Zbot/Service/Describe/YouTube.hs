@@ -38,12 +38,11 @@ info = do
     case decode $ extractJson script of
         Nothing                                       -> empty
         Just (YouTubeInfo title seconds views rating) -> return $ T.concat [
-                "["
-            ,   "rating: ", toStarRating rating, ", "
+                title
+            ,   " ["
             ,   "length: ", toTime seconds, ", "
             ,   "views: ", T.pack $ show views
             ,   "] "
-            ,   title
             ]
 
 extractJson :: T.Text -> LBS.ByteString
@@ -55,14 +54,6 @@ extractJson script = LBS.fromStrict $ T.encodeUtf8 json
         (json, _)            = T.breakOn ");" jsonWithTrailing
 
 
-toStarRating :: Double -> T.Text
-toStarRating rating | rating < 0.5 = "☆☆☆☆☆"
-                    | rating < 1.5 = "★☆☆☆☆"
-                    | rating < 2.5 = "★★☆☆☆"
-                    | rating < 3.5 = "★★★☆☆"
-                    | rating < 4.5 = "★★★★☆"
-                    | otherwise    = "★★★★★"
-
 toTime :: Int -> T.Text
 toTime seconds = T.intercalate ":" [hourText, minuteText, secondText]
     where
@@ -71,12 +62,11 @@ toTime seconds = T.intercalate ":" [hourText, minuteText, secondText]
         hourText = formatText $ seconds `div` 60 `div` 60
         formatText = T.justifyRight 2 '0' . T.pack . show
 
-data YouTubeInfo = YouTubeInfo T.Text Int Integer Double
+data YouTubeInfo = YouTubeInfo T.Text Int Integer
 
 instance FromJSON YouTubeInfo where
     parseJSON (Object v) = v .: "args" >>= \args -> YouTubeInfo
         <$> args .: "title"
         <*> args .: "length_seconds"
         <*> args .: "view_count"
-        <*> args .: "avg_rating"
     parseJSON _          = mzero
