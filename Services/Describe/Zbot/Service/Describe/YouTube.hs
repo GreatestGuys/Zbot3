@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Zbot.Service.Describe.YouTube (
     describeYouTube
 ) where
@@ -34,10 +35,11 @@ toEmbedLink url
 
 info :: Scraper T.Text T.Text
 info = do
-    script <- T.concat <$> (texts $ ("body" :: T.Text) // ("script" :: T.Text))
+    script <- T.concat
+           <$> (texts $ ("body" :: String) // ("script" :: String))
     case decode $ extractJson script of
         Nothing                                       -> empty
-        Just (YouTubeInfo title seconds views rating) -> return $ T.concat [
+        Just (YouTubeInfo title seconds views) -> return $ T.concat [
                 title
             ,   " ["
             ,   "length: ", toTime seconds, ", "

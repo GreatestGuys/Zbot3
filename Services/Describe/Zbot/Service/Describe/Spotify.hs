@@ -10,7 +10,7 @@ import Text.HTML.Scalpel
 import qualified Data.Text as T
 
 
-spotifyInfix = "open.spotify.com/"
+spotifyInfix = T.pack "open.spotify.com/"
 
 describeSpotify :: Describer
 describeSpotify url
@@ -21,4 +21,4 @@ info :: Scraper T.Text T.Text
 info = do
     title <- text $ Any @: [hasClass "primary-title"]
     artist <- text $ Any @: [hasClass "secondary-title"]
-    return $ T.concat [title, " by ", artist]
+    return $ T.concat [title, T.pack " by ", artist]

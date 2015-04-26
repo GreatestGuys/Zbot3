@@ -10,7 +10,7 @@ import Text.HTML.Scalpel
 import qualified Data.Text as T
 
 
-twitterInfixes = ["twitter.com/", "/status/"]
+twitterInfixes = map T.pack ["twitter.com/", "/status/"]
 
 infixesOf :: [T.Text] -> T.Text -> Bool
 infixesOf infixes target = all (`T.isInfixOf` target) infixes
@@ -25,4 +25,4 @@ tweet = chroot (Any @: [hasClass "tweet"]) $ do
     status   <- text $ Any @: [hasClass "tweet-text"]
     userName <- text $ Any @: [hasClass "username"]
     fullName <- text $ Any @: [hasClass "fullname"]
-    return $ T.concat [userName, " (", fullName, ") ", status]
+    return $ T.concat [userName, T.pack " (", fullName, T.pack ") ", status]

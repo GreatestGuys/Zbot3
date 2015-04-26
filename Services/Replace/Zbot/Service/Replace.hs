@@ -25,8 +25,8 @@ replace history = unitService "Zbot.Service.Replace" handler
         handler _                        = return ()
 
         handleMessage reply (Just line) msg
-            | (_:from:to:"g":_) <- split msg = reply $ replaceAll from to line
-            | (_:from:to:_)     <- split msg = reply $ replaceOne from to line
+            | ("s":from:to:"g":_) <- split msg = reply $ replaceAll from to line
+            | ("s":from:to:_)     <- split msg = reply $ replaceOne from to line
         handleMessage _ _ _                  = return ()
 
         findLastMessage channel nick = foldHistoryBackward history match Nothing

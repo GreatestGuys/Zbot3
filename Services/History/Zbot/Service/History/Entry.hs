@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 module Zbot.Service.History.Entry (
     Entry (..)
 ,   mkEntry
@@ -42,7 +43,7 @@ instance Binary.Binary Entry where
         Binary.put event
         putWord16 totalSize
         where
-            encodedSize :: Binary.Binary b => b => Word16
+            encodedSize :: forall b. Binary.Binary b => b -> Word16
             encodedSize = fromIntegral . LBS.length . Binary.encode
 
 instance Binary.Binary UTCTime where
