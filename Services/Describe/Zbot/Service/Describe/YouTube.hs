@@ -35,8 +35,7 @@ toEmbedLink url
 
 info :: Scraper T.Text T.Text
 info = do
-    script <- T.concat
-           <$> (texts $ ("body" :: String) // ("script" :: String))
+    script <- T.concat <$> texts (("body" :: String) // ("script" :: String))
     case decode $ extractJson script of
         Nothing                                       -> empty
         Just (YouTubeInfo title seconds views) -> return $ T.concat [

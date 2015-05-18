@@ -16,7 +16,7 @@ import qualified Data.Text as T
 
 
 -- | A service that will replace a substring of a users previous message.
-replace :: (MonadIO m, Bot m) => Handle History -> Service m ()
+replace :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 replace history = unitService "Zbot.Service.Replace" handler
     where
         handler (Shout channel nick msg) = lift $ do

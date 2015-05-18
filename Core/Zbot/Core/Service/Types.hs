@@ -56,15 +56,17 @@ serviceName = MkMonadService $ metaName <$> get
 class Collective m where
 
     -- | An opaque handle that can be used to run operations in a state monad
-    -- containing the state of the corresponding service.
-    data Handle :: * -> *
+    -- containing the state of the corresponding service. The first parameter is
+    -- the type of the collective, and the second is the type of the service's
+    -- state.
+    data Handle :: (* -> *) -> * -> *
 
     -- | Register a new service with the collective.
-    registerService :: Monad m => Service m a -> m (Handle a)
+    registerService :: Monad m => Service m a -> m (Handle m a)
 
     -- | Run an operation in a state monad contain the state of the given
     -- service. Any changes to the state will be persisted.
-    run :: Monad m => Handle a -> MonadService a m b -> m b
+    run :: Monad m => Handle m a -> MonadService a m b -> m b
 
     -- | Process an event by propagating it to each of the registered services.
     processEvent :: Monad m => Event -> m ()
