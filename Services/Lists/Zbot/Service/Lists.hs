@@ -34,20 +34,20 @@ serializeLists :: Lists -> Maybe BS.ByteString
 serializeLists (MkLists m) = Just $ BS.fromString $ show m
 
 deserializeLists :: BS.ByteString -> Maybe Lists
-deserializeLists bs = MkLists <$> (readMay $ BS.toString bs)
+deserializeLists bs = MkLists <$> readMay (BS.toString bs)
 
 listsCommand :: Bot m => Reply m -> T.Text -> MonadService Lists m ()
 listsCommand reply args = listsAction (T.words args)
     where
-        listsAction ("show":[])             = showLists
-        listsAction ("show":list:[])        = showList list
-        listsAction ("add":list:[])         = addList list
+        listsAction ["show"]                = showLists
+        listsAction ["show", list]          = showList list
+        listsAction ["add", list]           = addList list
         listsAction ("add":"at":i:list:xs)  = addElemAt i list xs
         listsAction ("add":list:xs)         = addElem list xs
-        listsAction ("rm":list:[])          = rmList list
+        listsAction ["rm", list]            = rmList list
         listsAction ("rm":list:xs)          = rmElem list xs
         listsAction ("check":list:e:xs)     = checkOffElem list (e:xs)
-        listsAction ("flush":list:[])       = flushList list
+        listsAction ["flush", list]         = flushList list
         listsAction _                       = help
 
         -- The usage message, in case no arguments are passed.
@@ -72,18 +72,15 @@ listsCommand reply args = listsAction (T.words args)
         showList l = do
             (MkLists listMap) <- get
             let result = M.lookup l listMap
-            case result of
-                Nothing -> lift $ reply
-                                $  T.concat ["There is no list '", l, "'."]
-                Just xs -> lift $ case xs of
+            lift $ case result of
+                Nothing -> reply $ T.concat ["There is no list '", l, "'."]
+                Just xs -> case xs of
                     []  ->  reply "Much empty. Such void. Wow!"
-                    _   ->  sequence_
-                        .   map reply
-                        .   map (\(i, (n, b)) -> T.concat [
+                    _   ->  mapM_ (reply . (\(i, (n, b)) -> T.concat [
                                     showText i, ") "
                                 ,   if b then st n else n
-                                ])
-                        $   zip [1..] xs
+                                ]))
+                        $   zip [(1 :: Int)..] xs
             where
                 st = ("\204\182" `T.append`)
 
@@ -92,10 +89,10 @@ listsCommand reply args = listsAction (T.words args)
         addList l = do
             (MkLists listMap) <- get
             let result = M.member l listMap
-            case result of
-                True    -> lift $ reply
-                        $  T.concat ["There is already a list '", l, "'."]
-                False   ->  do
+            if result
+                then lift $ reply
+                          $  T.concat ["There is already a list '", l, "'."]
+                else do
                     put (MkLists $ M.insert l [] listMap)
                     lift $ reply
                          $ T.concat ["'", l, "' added to the list of lists."]
@@ -138,21 +135,19 @@ listsCommand reply args = listsAction (T.words args)
                                 $ T.concat ["There is no list '", l, "'."]
                 Just ls -> do
                     let b = T.all isNumber i
-                    case b of
-                        False -> lift $ reply $ T.concat [
+                    if b then lift $ reply $ T.concat [
                                       "There is no index '", i
                                   ,   "' into list '", l, "'."
                                   ]
-                        True  -> do
+                         else do
                             let result2 = lookup x ls
                             case result2 of
                                 Nothing -> do
                                     let i' = readText i - 1
-                                    let f = \y z -> y ++ [(x,False)] ++ z
+                                    let f y z = y ++ [(x,False)] ++ z
                                     put $ MkLists
                                         $ M.update
-                                            (\lx -> return
-                                                 $  uncurry f (splitAt i' lx))
+                                            (return . uncurry f . splitAt i')
                                             l
                                             listMap
                                     lift $ reply
@@ -172,11 +167,10 @@ listsCommand reply args = listsAction (T.words args)
         rmList l = do
             (MkLists listMap) <- get
             let result = M.member l listMap
-            case result of
-                True  -> lift $ reply
-                              $ T.concat ["Deleting list '", l, "'."]
-                False -> lift $ reply
-                              $ T.concat ["There is no list '", l, "'."]
+            lift $ reply
+                 $ if result
+                    then T.concat ["Deleting list '", l, "'."]
+                    else T.concat ["There is no list '", l, "'."]
             put $ MkLists $ M.delete l listMap
 
         -- Removes an element xs from an existing list l.
@@ -221,7 +215,7 @@ listsCommand reply args = listsAction (T.words args)
                     | T.all isNumber x =
                         let i = readText x
                         in  M.update
-                                (\lx -> return $ take (i-1) lx ++ (drop i lx))
+                                (\lx -> return $ take (i-1) lx ++ drop i lx)
                                 key
                                 dic
                     | otherwise = M.update
@@ -235,7 +229,7 @@ listsCommand reply args = listsAction (T.words args)
         -- Will un-checkoff an already checked off element.
         checkOffElem l xs = do
             (MkLists listMap) <- get
-            let result = if xs == [] then Nothing else M.lookup l listMap
+            let result = if null xs then Nothing else M.lookup l listMap
             let x = T.unwords xs
             case result of
                 Nothing -> lift $ reply
@@ -278,10 +272,10 @@ listsCommand reply args = listsAction (T.words args)
                         let end' = drop (i-1)
                         let mid = flip' . head . end'
                         let end = tail . end'
-                        let f = \ls -> return $ start ls ++ [mid ls] ++ end ls
+                        let f ls = return $ start ls ++ [mid ls] ++ end ls
                         M.update f key dic
                     | otherwise        = do
-                        let f' = \t@(n,_) -> if n == x then flip' t else t
+                        let f' t@(n,_) = if n == x then flip' t else t
                         let f = return . map f'
                         M.update f key dic
 
