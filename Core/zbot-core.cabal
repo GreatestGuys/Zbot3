@@ -26,6 +26,7 @@ library
         ,   text                      >= 1.2
         ,   time                      >= 1.4.0
         ,   transformers              >= 0.3
+        ,   unix                      >= 2.7
 
     exposed-modules:
             Zbot.Core.Bot

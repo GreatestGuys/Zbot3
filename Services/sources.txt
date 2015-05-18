@@ -1,7 +1,11 @@
+./Define
 ./Describe
 ./Grep
 ./History
+./Lists
 ./NGram
 ./Op
+./Replace
 ./Roll
+./Seen
 ./Uptime

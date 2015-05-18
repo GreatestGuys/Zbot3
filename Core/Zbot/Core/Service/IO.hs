@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Zbot.Core.Service.IO (
     IOCollective
 ,   Service
@@ -20,9 +21,10 @@ import System.FilePath ((</>))
 
 import qualified Control.Monad.Catch as Catch
 import qualified Crypto.Hash.SHA256 as SHA256
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base16 as Hex
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import qualified Data.ByteString.Base16 as Hex
 
 
 data IOCollectiveMeta m = IOCollectiveMeta {
@@ -40,27 +42,35 @@ instance MonadIO io => MonadIO (IOCollective io) where
 instance MonadTrans IOCollective where
     lift value = MkIOCollective $ lift value
 
-instance (Catch.MonadCatch io, MonadIO io) => Collective (IOCollective io) where
+instance (Applicative io,
+          Functor io,
+          Catch.MonadCatch io,
+          MonadIO io) => Collective (IOCollective io) where
 
-    data Handle a = MkHandle (IORef (ServiceMeta a))
+    data Handle (IOCollective io) a =
+            MkHandle (IORef (ServiceMeta a, Service (IOCollective io) a))
 
-    registerService service = MkIOCollective $ do
-        dataDir <- gets metaDataDir
-        let serviceDataDir = dataDir </> normalize (name service)
-        let serviceMeta = ServiceMeta (initial service) (name service)
-        liftIO $ createDirectoryIfMissing True serviceDataDir
-        ioref <- liftIO $ newIORef serviceMeta
-        modify $ addHandler (makeHandler ioref)
-        return $ MkHandle ioref
+    registerService service = do
+        serviceMeta <- readFromSaveFile
+                            (ServiceMeta (initial service) (name service))
+                            service
+        MkIOCollective $ do
+            dataDir <- gets metaDataDir
+            let serviceDataDir = dataDir </> normalize (name service)
+            liftIO $ createDirectoryIfMissing True serviceDataDir
+            ioref <- liftIO $ newIORef (serviceMeta, service)
+            modify $ addHandler (makeHandler ioref)
+            return $ MkHandle ioref
         where
             addHandler handler meta = meta {
                     metaHandlers = metaHandlers meta ++ [handler]
                 }
             makeHandler ioref event = suppressErrors event $ do
-                a <- liftIO $ readIORef ioref
-                let (MkMonadService action) = (process service event)
-                a' <- execStateT action a
-                liftIO $ writeIORef ioref a'
+                (m, s) <- liftIO $ readIORef ioref
+                let (MkMonadService action) = process service event
+                m' <- execStateT action m
+                liftIO $ writeIORef ioref (m', s)
+                writeToSaveFile m' s
 
             suppressErrors event = flip Catch.catch (errorHandler event)
             errorHandler :: MonadIO m => Event -> Catch.SomeException -> m ()
@@ -80,17 +90,47 @@ instance (Catch.MonadCatch io, MonadIO io) => Collective (IOCollective io) where
                 marker '='
 
     run (MkHandle ioref) (MkMonadService value) = do
-        a <- MkIOCollective $ liftIO $ readIORef ioref
-        (result, a') <- runStateT value a
-        MkIOCollective $ liftIO $ writeIORef ioref a'
+        (m, s) <- MkIOCollective $ liftIO $ readIORef ioref
+        (result, m') <- runStateT value m
+        MkIOCollective $ liftIO $ writeIORef ioref (m', s)
+        writeToSaveFile m' s
         return result
 
-    processEvent event = MkIOCollective get >>= (mapM_ ($ event)) . metaHandlers
+    processEvent event = MkIOCollective get >>= mapM_ ($ event) . metaHandlers
 
     sandboxedFilePath fileName = MkMonadService $ do
         dataDir <- lift $ MkIOCollective $ gets metaDataDir
         serviceName <- gets metaName
         return $ dataDir </> normalize serviceName </> normalize fileName
+
+writeToSaveFile :: MonadIO io
+                => ServiceMeta a
+                -> Service (IOCollective io) a
+                -> IOCollective io ()
+writeToSaveFile meta@(ServiceMeta value _) service = do
+    saveFile <- serviceSaveFile meta
+    let serializedValue = serialize service value
+    liftIO $ writeTo saveFile serializedValue
+    where
+        writeTo _    Nothing        = return ()
+        writeTo path (Just valueBS) = BS.writeFile path valueBS
+
+readFromSaveFile :: MonadIO io
+                 => ServiceMeta a
+                 -> Service (IOCollective io) a
+                 -> IOCollective io (ServiceMeta a)
+readFromSaveFile meta service = do
+    saveFile <- serviceSaveFile meta
+    liftIO $ do
+        touchFile saveFile
+        serializedValue <- liftIO $ BS.readFile saveFile
+        let maybeValue = deserialize service serializedValue
+        return $ maybe meta (flip ServiceMeta (metaName meta)) maybeValue
+
+serviceSaveFile :: MonadIO io => ServiceMeta a -> IOCollective io FilePath
+serviceSaveFile (ServiceMeta _ serviceName) = do
+    dataDir <- MkIOCollective $ gets metaDataDir
+    return $ (dataDir </> normalize serviceName) ++ ".save"
 
 normalize :: T.Text -> FilePath
 normalize name = concat [
@@ -103,3 +143,6 @@ runIOCollective :: MonadIO io => FilePath -> IOCollective io a -> io a
 runIOCollective dataDir (MkIOCollective value) = do
     liftIO $ createDirectoryIfMissing True dataDir
     evalStateT value $ IOCollectiveMeta dataDir []
+
+touchFile :: FilePath -> IO ()
+touchFile = (`BS.appendFile` BS.empty)

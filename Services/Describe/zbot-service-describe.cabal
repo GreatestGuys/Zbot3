@@ -18,7 +18,7 @@ library
         ,   curl                      >= 1.3
         ,   download-curl             >= 0.1.4
         ,   mtl                       >= 2.1
-        ,   scalpel                   >= 0.1.1
+        ,   scalpel                   >= 0.2
         ,   tagsoup                   >= 0.12
         ,   text                      >= 1.2
         ,   transformers              >= 0.3
@@ -34,9 +34,6 @@ library
         ,   Zbot.Service.Describe.YouTube
 
     ghc-options: -W -Werror
-
-    default-extensions:
-        OverloadedStrings
 
     default-language:    Haskell2010
 

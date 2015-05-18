@@ -1,7 +1,9 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Zbot.Service.Describe.YouTube (
     describeYouTube
 ) where
 
+import Zbot.Extras.Scrape
 import Zbot.Service.Describe
 
 import Control.Applicative
@@ -29,38 +31,29 @@ toEmbedLink url
     | "watch?v=" `T.isInfixOf` url = T.replace "watch?v=" "embed/" url
     | otherwise                    =
         let (_, videoId) = T.breakOn "v=" url
-        in "http://www.youtube.com/embed/" `T.append` (T.drop 2 videoId)
+        in "http://www.youtube.com/embed/" `T.append` T.drop 2 videoId
 
 info :: Scraper T.Text T.Text
 info = do
-    script <- T.concat <$> (texts $ ("body" :: T.Text) // ("script" :: T.Text))
+    script <- T.concat <$> texts (("body" :: String) // ("script" :: String))
     case decode $ extractJson script of
         Nothing                                       -> empty
-        Just (YouTubeInfo title seconds views rating) -> return $ T.concat [
-                "["
-            ,   "rating: ", toStarRating rating, ", "
+        Just (YouTubeInfo title seconds views) -> return $ T.concat [
+                title
+            ,   " ["
             ,   "length: ", toTime seconds, ", "
             ,   "views: ", T.pack $ show views
             ,   "] "
-            ,   title
             ]
 
 extractJson :: T.Text -> LBS.ByteString
-extractJson script = LBS.fromStrict $ T.encodeUtf8 $ json
+extractJson script = LBS.fromStrict $ T.encodeUtf8 json
     where
         jsonPrefix           = "yt.setConfig('PLAYER_CONFIG',"
         (_, jsonWithGarbage) = T.breakOn jsonPrefix script
         jsonWithTrailing     = T.drop (T.length jsonPrefix) jsonWithGarbage
         (json, _)            = T.breakOn ");" jsonWithTrailing
 
-
-toStarRating :: Double -> T.Text
-toStarRating rating | rating < 0.5 = "☆☆☆☆☆"
-                    | rating < 1.5 = "★☆☆☆☆"
-                    | rating < 2.5 = "★★☆☆☆"
-                    | rating < 3.5 = "★★★☆☆"
-                    | rating < 4.5 = "★★★★☆"
-                    | otherwise    = "★★★★★"
 
 toTime :: Int -> T.Text
 toTime seconds = T.intercalate ":" [hourText, minuteText, secondText]
@@ -70,12 +63,11 @@ toTime seconds = T.intercalate ":" [hourText, minuteText, secondText]
         hourText = formatText $ seconds `div` 60 `div` 60
         formatText = T.justifyRight 2 '0' . T.pack . show
 
-data YouTubeInfo = YouTubeInfo T.Text Int Integer Double
+data YouTubeInfo = YouTubeInfo T.Text Int Integer
 
 instance FromJSON YouTubeInfo where
     parseJSON (Object v) = v .: "args" >>= \args -> YouTubeInfo
         <$> args .: "title"
         <*> args .: "length_seconds"
         <*> args .: "view_count"
-        <*> args .: "avg_rating"
     parseJSON _          = mzero

@@ -19,7 +19,7 @@ data Options = Options {
     }
 
 textOption :: Mod OptionFields String -> Parser T.Text
-textOption = (fmap T.pack) . strOption
+textOption = fmap T.pack . strOption
 
 optionsParserInfo :: ParserInfo Options
 optionsParserInfo = info optionsParser meta

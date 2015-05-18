@@ -44,12 +44,12 @@ foldLogBackward f initial path = withLogFile path $ \(ptr, size) -> do
     let endOfFile = plusPtr ptr size
     loop ptr endOfFile initial
     where
-        isSOF ptr sof = plusPtr ptr (0 - minEntrySize) < sof
+        isSOF ptr sof = plusPtr ptr (negate minEntrySize) < sof
 
         loop startOfFile ptr accum | isSOF ptr startOfFile = return accum
                                    | otherwise             = do
             entrySize <- fromIntegral <$> peekWord16 (plusPtr ptr (-2))
-            let entryPtr = plusPtr ptr (0 - entrySize)
+            let entryPtr = plusPtr ptr (negate entrySize)
             Entry time event <- peekEntry entrySize entryPtr
             loop startOfFile entryPtr (f time event accum)
 

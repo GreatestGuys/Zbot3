@@ -17,11 +17,15 @@ Executable zbot3
             base                      >= 4.3      && < 5
         ,   zbot-core                 == 3.0
         ,   zbot-cli                  == 3.0
+        ,   zbot-service-define       == 3.0
         ,   zbot-service-describe     == 3.0
         ,   zbot-service-grep         == 3.0
         ,   zbot-service-history      == 3.0
+        ,   zbot-service-lists        == 3.0
         ,   zbot-service-op           == 3.0
+        ,   zbot-service-replace      == 3.0
         ,   zbot-service-roll         == 3.0
+        ,   zbot-service-seen         == 3.0
         ,   zbot-service-uptime       == 3.0
 
     ghc-options: -W -Werror

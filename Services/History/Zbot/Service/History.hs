@@ -21,8 +21,8 @@ newtype History = MkHistory ()
 
 -- | A service that will keep track of all IRC events that Zbot ever receives.
 history :: (MonadIO io, MonadIO m, Bot m) => io (Service m History)
-history = do
-    return $ Service {
+history =
+    return Service {
             initial     = MkHistory ()
         ,   serialize   = const Nothing
         ,   deserialize = const Nothing
@@ -39,14 +39,14 @@ handleEvent event = do
     appendLog logPath event
 
 foldHistoryBackward :: (MonadIO m, Collective m)
-                    => Handle History
+                    => Handle m History
                     -> (UTCTime -> Event -> a -> a) -> a -> m a
 foldHistoryBackward handle f initial = run handle $ do
     logPath <- sandboxedFilePath logFileName
     foldLogBackward f initial logPath
 
 foldHistoryForward :: (MonadIO m, Collective m)
-                   => Handle History
+                   => Handle m History
                    -> (UTCTime -> Event -> a -> a) -> a -> m a
 foldHistoryForward handle f initial = run handle $ do
     logPath <- sandboxedFilePath logFileName

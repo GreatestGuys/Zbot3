@@ -18,7 +18,7 @@ import qualified Data.Text as T
 
 
 -- | A service that will grant ops to users on the current channel.
-grep :: (MonadIO m, Bot m) => Handle History -> Service m ()
+grep :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 grep historyHandle =
     unitService "Zbot.Service.Grep" (onCommand "!grep" grepCommand)
     where
