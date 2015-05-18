@@ -12,6 +12,7 @@ import Zbot.Service.Describe.Twitter
 import Zbot.Service.Describe.YouTube
 import Zbot.Service.Grep
 import Zbot.Service.History
+import Zbot.Service.Lists
 import Zbot.Service.Op
 import Zbot.Service.Replace
 import Zbot.Service.Roll
@@ -31,6 +32,7 @@ main = zbotMain $ do
         ,   describeDefault
         ]
     registerService_ $ grep historyHandle
+    registerService_ lists
     registerService_ op
     registerService_ $ replace historyHandle
     registerService_ roll

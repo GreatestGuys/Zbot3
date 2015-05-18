@@ -5,7 +5,6 @@ module Zbot.Service.Define (
 import Zbot.Core.Bot
 import Zbot.Core.Service
 import Zbot.Extras.Command
-import Zbot.Extras.Message
 import Zbot.Extras.Scrape
 import Zbot.Extras.UnitService
 

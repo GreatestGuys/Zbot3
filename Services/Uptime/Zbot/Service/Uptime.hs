@@ -5,7 +5,6 @@ module Zbot.Service.Uptime (
 import Zbot.Core.Bot
 import Zbot.Core.Service
 import Zbot.Extras.Command
-import Zbot.Extras.Message
 import Zbot.Extras.Time
 import Zbot.Extras.UnitService
 

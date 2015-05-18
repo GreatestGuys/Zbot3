@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiWayIf #-}
 module Zbot.Extras.Command (
-    onCommand
+    Reply
+,   onCommand
 )   where
 
 import Zbot.Core.Bot

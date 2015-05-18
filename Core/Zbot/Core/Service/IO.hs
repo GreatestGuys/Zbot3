@@ -42,7 +42,10 @@ instance MonadIO io => MonadIO (IOCollective io) where
 instance MonadTrans IOCollective where
     lift value = MkIOCollective $ lift value
 
-instance (Catch.MonadCatch io, MonadIO io) => Collective (IOCollective io) where
+instance (Applicative io,
+          Functor io,
+          Catch.MonadCatch io,
+          MonadIO io) => Collective (IOCollective io) where
 
     data Handle (IOCollective io) a =
             MkHandle (IORef (ServiceMeta a, Service (IOCollective io) a))
@@ -67,6 +70,7 @@ instance (Catch.MonadCatch io, MonadIO io) => Collective (IOCollective io) where
                 let (MkMonadService action) = process service event
                 m' <- execStateT action m
                 liftIO $ writeIORef ioref (m', s)
+                writeToSaveFile m' s
 
             suppressErrors event = flip Catch.catch (errorHandler event)
             errorHandler :: MonadIO m => Event -> Catch.SomeException -> m ()

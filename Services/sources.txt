@@ -2,6 +2,7 @@
 ./Describe
 ./Grep
 ./History
+./Lists
 ./Op
 ./Replace
 ./Roll

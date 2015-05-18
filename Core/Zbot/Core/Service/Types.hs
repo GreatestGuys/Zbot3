@@ -39,7 +39,13 @@ data ServiceMeta a = ServiceMeta {
     }
 
 newtype MonadService s m b = MkMonadService (StateT (ServiceMeta s) m b)
-    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, Catch.MonadCatch, Catch.MonadThrow)
+    deriving (Applicative,
+              Catch.MonadCatch,
+              Catch.MonadThrow,
+              Functor,
+              Monad,
+              MonadIO,
+              MonadTrans)
 
 instance (Applicative m, Monad m) => MonadState s (MonadService s m) where
     get = MkMonadService $ metaValue <$> get
@@ -53,7 +59,7 @@ serviceName :: (Applicative m, Monad m) => MonadService a m T.Text
 serviceName = MkMonadService $ metaName <$> get
 
 -- | A Collective is a group of managed services that can process IRC events.
-class Collective m where
+class (Applicative m, Functor m, Monad m) => Collective m where
 
     -- | An opaque handle that can be used to run operations in a state monad
     -- containing the state of the corresponding service. The first parameter is

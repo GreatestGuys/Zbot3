@@ -21,6 +21,7 @@ Executable zbot3
         ,   zbot-service-describe     == 3.0
         ,   zbot-service-grep         == 3.0
         ,   zbot-service-history      == 3.0
+        ,   zbot-service-lists        == 3.0
         ,   zbot-service-op           == 3.0
         ,   zbot-service-replace      == 3.0
         ,   zbot-service-roll         == 3.0
