@@ -13,8 +13,8 @@ import Control.Monad.Trans.Class (lift)
 import qualified Data.Text as T
 
 
-ngram :: Bot m => Handle History -> Service m ()
+ngram :: Bot m => Handle m History -> Service m ()
 ngram history = unitService "Zbot.Service.NGram" (handler history)
 
-handler :: Bot m => Handle History -> Event -> MonadService () m ()
+handler :: Bot m => Handle m History -> Event -> MonadService () m ()
 handler history event = return ()
