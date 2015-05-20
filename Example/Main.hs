@@ -13,6 +13,7 @@ import Zbot.Service.Describe.YouTube
 import Zbot.Service.Grep
 import Zbot.Service.History
 import Zbot.Service.Lists
+import Zbot.Service.NGram
 import Zbot.Service.Op
 import Zbot.Service.Replace
 import Zbot.Service.Roll
@@ -33,6 +34,7 @@ main = zbotMain $ do
         ]
     registerService_ $ grep historyHandle
     registerService_ lists
+    ngram historyHandle >>= registerService_
     registerService_ op
     registerService_ $ replace historyHandle
     registerService_ roll

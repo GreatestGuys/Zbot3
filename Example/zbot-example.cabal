@@ -15,18 +15,20 @@ Executable zbot3
 
     build-depends:
             base                      >= 4.3      && < 5
-        ,   zbot-core                 == 3.0
-        ,   zbot-cli                  == 3.0
-        ,   zbot-service-define       == 3.0
-        ,   zbot-service-describe     == 3.0
-        ,   zbot-service-grep         == 3.0
-        ,   zbot-service-history      == 3.0
-        ,   zbot-service-lists        == 3.0
-        ,   zbot-service-op           == 3.0
-        ,   zbot-service-replace      == 3.0
-        ,   zbot-service-roll         == 3.0
-        ,   zbot-service-seen         == 3.0
-        ,   zbot-service-uptime       == 3.0
+        ,   zbot-core
+        ,   zbot-cli
+        ,   zbot-service-define
+        ,   zbot-service-describe
+        ,   zbot-service-grep
+        ,   zbot-service-history
+        ,   zbot-service-history
+        ,   zbot-service-lists
+        ,   zbot-service-ngram
+        ,   zbot-service-op
+        ,   zbot-service-replace
+        ,   zbot-service-roll
+        ,   zbot-service-seen
+        ,   zbot-service-uptime
 
     ghc-options: -W -Werror
 

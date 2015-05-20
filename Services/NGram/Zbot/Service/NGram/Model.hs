@@ -4,18 +4,20 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeOperators #-}
-module Zbot.Service.NGram.Model
-where
+module Zbot.Service.NGram.Model (
+    Model
+,   makeModel
+,   generate
+) where
 
-import Control.Applicative
-import Control.Arrow
-import Data.Foldable (foldr', toList)
-import Data.Int
-import Data.List
-import Data.Monoid
-import Data.Proxy
-import Data.Random.RVar
-import Data.Ratio
+import Control.Applicative ((<$>), (<*>))
+import Control.Arrow (second)
+import Data.Foldable (toList)
+import Data.Int (Int64)
+import Data.List (intercalate, tails)
+import Data.Monoid (Monoid (..), (<>))
+import Data.Proxy (Proxy (..))
+import Data.Random (RVar, uniform)
 import GHC.TypeLits (KnownNat, Nat, natVal, type (<=))
 
 import qualified Data.Map.Strict as Map
@@ -32,11 +34,11 @@ data Distribution a = Distribution {
     ,   distSamples :: Map.Map (Token a) Int64
     } deriving (Eq, Show, Read)
 
-data Model (n :: Nat) a = Model (Map.Map (Gram n a) (Distribution a))
+newtype Model (n :: Nat) a = Model (Map.Map (Gram n a) (Distribution a))
     deriving (Eq, Read)
 
 instance Ord a => Monoid (Distribution a) where
-    mempty = Distribution 0 (Map.empty)
+    mempty = Distribution 0 Map.empty
     mappend (Distribution sizeA distA) (Distribution sizeB distB)
         = Distribution {
             distSamples = Map.unionWith (+) distA distB
@@ -44,7 +46,7 @@ instance Ord a => Monoid (Distribution a) where
         }
 
 instance Ord a => Monoid (Model n a) where
-    mempty = Model (Map.empty)
+    mempty = Model Map.empty
     mappend (Model a) (Model b) = Model $ Map.unionWith (<>) a b
 
 instance Show a => Show (Model n a) where
@@ -56,7 +58,7 @@ instance Show a => Show (Model n a) where
 
             showGram = intercalate "\t" . map showToken . toList
 
-            showDist (Distribution count dist)
+            showDist (Distribution _ dist)
                 = map (\(t, c) -> showToken t ++ "\t" ++ show c)
                 $ Map.assocs dist
 
@@ -64,10 +66,11 @@ instance Show a => Show (Model n a) where
             showToken End       = "End"
             showToken (Token a) = show a
 
--- |
+-- | Construct an n-gram model from a list of lists of grams. For NLP purposes
+-- these units are likely to be words.
 makeModel :: forall n a. (KnownNat n, 2 <= n, Ord a) => [[a]] -> Model n a
 makeModel = mconcat . map (ngramsToModel . ngrams n)
-    where n = (Proxy :: Proxy n)
+    where n = Proxy :: Proxy n
 
 initial :: (KnownNat n, 2 <= n) => Proxy n -> [Token a]
 initial n = replicate (nLit - 1) Start
@@ -90,10 +93,26 @@ ngramsToModel grams = Model model
         toDist c = Distribution total c where total = Map.foldr (+) 0 c
         model = fmap toDist counts
 
--- |
-score :: Model n a -> [a] -> Rational
-score = error "TODO"
+-- | Generate a sequence of grams based on the probabilities described by
+-- a given n-gram model.
+generate :: forall n a. (KnownNat n, 2 <= n, Ord a) => Model n a -> RVar [a]
+generate (Model model) = fromTokens <$> genFrom start
+    where
+        n = Proxy :: Proxy n
+        start = Seq.fromList $ initial n
 
--- |
-generate :: Model n a -> RVar [a]
-generate = error "TODO"
+        genFrom current = do
+            let Distribution size samples = model Map.! current
+            let sampleList = Map.assocs samples
+            let sampleListCDF = scanl1 (\(_, s) (t, c) -> (t, c + s)) sampleList
+            index <- uniform 1 size
+            let ((token, _):_) = dropWhile ((< index) . snd) sampleListCDF
+            let nextGram = Seq.drop 1 current Seq.|> token
+            if token == End
+                then return []
+                else (token :) <$> genFrom nextGram
+
+        fromTokens []           = []
+        fromTokens (Start:xs)   = fromTokens xs
+        fromTokens (End:xs)     = fromTokens xs
+        fromTokens (Token x:xs) = x : fromTokens xs
