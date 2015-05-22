@@ -6,6 +6,7 @@
 ./NGram
 ./Op
 ./Replace
+./Reputation
 ./Roll
 ./Seen
 ./Uptime

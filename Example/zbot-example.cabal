@@ -26,6 +26,7 @@ Executable zbot3
         ,   zbot-service-ngram
         ,   zbot-service-op
         ,   zbot-service-replace
+        ,   zbot-service-reputation
         ,   zbot-service-roll
         ,   zbot-service-seen
         ,   zbot-service-uptime

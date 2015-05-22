@@ -1,5 +1,6 @@
 module Zbot.Service.Lists (
-    lists
+    Lists
+,   lists
 )   where
 
 import Zbot.Core.Bot
