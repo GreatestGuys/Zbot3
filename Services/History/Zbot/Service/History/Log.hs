@@ -54,7 +54,9 @@ foldLogBackward f initial path = withLogFile path $ \(ptr, size) -> do
             loop startOfFile entryPtr (f time event accum)
 
 withLogFile :: MonadIO io => FilePath -> ((Ptr (), Int) -> IO a) -> io a
-withLogFile path = liftIO . MMap.mmapWithFilePtr path MMap.ReadOnly Nothing
+withLogFile path f = liftIO $ do
+    touchFile path
+    MMap.mmapWithFilePtr path MMap.ReadOnly Nothing f
 
 minEntrySize :: Int
 minEntrySize = 13  -- 2 * 2 bytes for size + 8 bytes for time + 1 byte for type.
@@ -67,3 +69,6 @@ peekByteString size ptr = LBS.pack <$> liftIO (peekArray size (castPtr ptr))
 
 peekWord16 :: (Functor io, MonadIO io) => Ptr () -> io Word16
 peekWord16 ptr = Binary.decode <$> liftIO (peekByteString 2 ptr)
+
+touchFile :: FilePath -> IO ()
+touchFile = (`LBS.appendFile` LBS.empty)

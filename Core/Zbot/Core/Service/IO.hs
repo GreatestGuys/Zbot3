@@ -56,7 +56,7 @@ instance (Applicative io,
                             service
         MkIOCollective $ do
             dataDir <- gets metaDataDir
-            let serviceDataDir = dataDir </> normalize (name service)
+            let serviceDataDir = dataDir </> (normalize (name service) ++ ".d")
             liftIO $ createDirectoryIfMissing True serviceDataDir
             ioref <- liftIO $ newIORef (serviceMeta, service)
             modify $ addHandler (makeHandler ioref)
@@ -101,7 +101,8 @@ instance (Applicative io,
     sandboxedFilePath fileName = MkMonadService $ do
         dataDir <- lift $ MkIOCollective $ gets metaDataDir
         serviceName <- gets metaName
-        return $ dataDir </> normalize serviceName </> normalize fileName
+        return $ dataDir </> (normalize serviceName ++ ".d")
+                         </> normalize fileName
 
 writeToSaveFile :: MonadIO io
                 => ServiceMeta a
@@ -130,14 +131,15 @@ readFromSaveFile meta service = do
 serviceSaveFile :: MonadIO io => ServiceMeta a -> IOCollective io FilePath
 serviceSaveFile (ServiceMeta _ serviceName) = do
     dataDir <- MkIOCollective $ gets metaDataDir
-    return $ (dataDir </> normalize serviceName) ++ ".save"
+    return (dataDir </> normalize serviceName)
 
 normalize :: T.Text -> FilePath
 normalize name = concat [
         filter isAlphaNum $ T.unpack name
     ,   "-"
-    ,   T.unpack $ T.decodeUtf8 $ Hex.encode $ SHA256.hash $ T.encodeUtf8 name
+    ,   take 7 $ T.unpack $ sha256 name
     ]
+    where sha256 = T.decodeUtf8 . Hex.encode . SHA256.hash . T.encodeUtf8
 
 runIOCollective :: MonadIO io => FilePath -> IOCollective io a -> io a
 runIOCollective dataDir (MkIOCollective value) = do
