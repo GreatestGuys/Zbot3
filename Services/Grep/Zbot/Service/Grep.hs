@@ -10,6 +10,7 @@ import Zbot.Extras.Command
 import Zbot.Extras.UnitService
 import Zbot.Service.History
 
+import Control.Applicative
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Trans.Class (lift)
 import Data.List (intercalate)
@@ -28,7 +29,8 @@ grep historyHandle =
     where
         grepCommand reply args = lift $ do
             let opts = parse args defaultOptions
-            history <- foldHistoryForward historyHandle historyToList []
+            history <-  drop 1
+                    <$> foldHistoryForward historyHandle historyToList []
             let matches = match opts [] history
             mapM_ reply $ reverse
                         $ intercalate ["----"]
