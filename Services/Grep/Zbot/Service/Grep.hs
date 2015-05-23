@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Zbot.Service.Grep (
     grep
 )   where
@@ -11,6 +12,9 @@ import Zbot.Service.History
 
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Trans.Class (lift)
+import Data.List (intercalate)
+import Data.Time.Clock (UTCTime)
+import Safe (readMay)
 import Text.Regex.TDFA ((=~))
 import Text.Regex.TDFA.Text ()
 
@@ -23,60 +27,103 @@ grep historyHandle =
     unitService "Zbot.Service.Grep" (onCommand "!grep" grepCommand)
     where
         grepCommand reply args = lift $ do
-            (result, _) <- foldHistoryBackward
-                            historyHandle
-                            (match (parse args defaultOptions))
-                            initialGrepResult
-            maybe (return ()) reply result
-
-        matchFirst query time (Shout channel nick msg) (Nothing, i)
-            | i == 0       = (Nothing, next i)
-            | msg =~ query = (describe time channel nick msg, next i)
-            | otherwise    = (Nothing, next i)
-        matchFirst _     _    _                        (r, i) = (r, next i)
-
-        next i = i `seq` i + 1
+            let opts = parse args defaultOptions
+            history <- foldHistoryForward historyHandle historyToList []
+            let matches = match opts [] history
+            mapM_ reply $ reverse
+                        $ intercalate ["----"]
+                        $ map describe matches
 
 data GrepOptions = GrepOptions {
-        context :: Int
-    ,   matches :: Int
-    ,   nick    :: Maybe Nick
-    ,   channel :: Maybe Channel
-    ,   query   :: String
+        optContext :: Int
+    ,   optMatches :: Int
+    ,   optNick    :: Maybe Nick
+    ,   optChannel :: Maybe Channel
+    ,   optQuery   :: T.Text
     }
 
 data GrepResult = GrepResult {
-        isFirst    :: Bool
-    ,   numMatched :: Int
-    ,   results    :: [[T.Text]]
+        resTime    :: UTCTime
+    ,   resChannel :: Channel
+    ,   resNick    :: Nick
+    ,   resMessage :: T.Text
+    ,   resPrefix  :: [(UTCTime, Nick, T.Text)]
+    ,   resSuffix  :: [(UTCTime, Nick, T.Text)]
     }
 
 defaultOptions :: GrepOptions
 defaultOptions = GrepOptions {
-        context = ,
-    ,   matches = 1
-    ,   nick = Nothing
-    ,   channel = Nothing
-    ,   query = Nothing
+        optContext = 0
+    ,   optMatches = 1
+    ,   optNick    = Nothing
+    ,   optChannel = Nothing
+    ,   optQuery   = "."
     }
 
 parse :: T.Text -> GrepOptions -> GrepOptions
-parse args options
-    | ("-m", Just m)  <- (flag, intValue)  = parse rest $ options {matches = m}
-    | ("-c", Just c)  <- (flag, intValue)  = parse rest $ options {context = c}
-    | ("-C", c)       <- (flag, justValue) = parse rest $ options {channel = c}
-    | ("-n", n)       <- (flag, justValue) = parse rest $ options {nick = n}
-    | otherwise                            = options {query = args}
+parse args opts
+    | ("-m", Just m) <- (flag, intValue)  = parse rest $ opts {optMatches = m}
+    | ("-c", Just c) <- (flag, intValue)  = parse rest $ opts {optContext = c}
+    | ("-C", c)      <- (flag, justValue) = parse rest $ opts {optChannel = c}
+    | ("-n", n)      <- (flag, justValue) = parse rest $ opts {optNick = n}
+    | T.null args                         = opts {optQuery = "."}
+    | otherwise                           = opts {optQuery = args}
     where
         (flag, flagRest) = T.breakOn " " args
         (value, valueRest) = T.breakOn " "  $ T.stripStart flagRest
         rest = T.stripStart valueRest
-        intValue = readMaybe $ T.unpack value
+        intValue = readMay $ T.unpack value
         justValue = Just value
 
-match :: GrepOptions -> UTCTime -> Event -> GrepResult -> GrepResult
+historyToList :: UTCTime -> Event -> [(UTCTime, Event)] -> [(UTCTime, Event)]
+historyToList time ev@Shout{} acc = (time, ev) : acc
+historyToList _    _          acc = acc
 
-describe :: UTCTime -> Channel -> Nick -> T.Text -> T.Text
-describe time channel nick message = T.concat [
-        T.pack $ show time, " " , channel, " ", nick, "> ", message
-    ]
+match :: GrepOptions
+      -> [(UTCTime, Event)]
+      -> [(UTCTime, Event)]
+      -> [GrepResult]
+match _ _ [] = []
+match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
+    | optMatches <= 0                     = []
+    | testMaybe optNick (/= evNick)       = skip
+    | testMaybe optChannel (/= evChannel) = skip
+    | not $ evMsg =~ optQuery             = skip
+    | otherwise                           = isMatch
+    where
+        testMaybe = flip $ maybe False
+
+        skip = match opts nextPrefix evs
+
+        isMatch = result : match nextOpts nextPrefix evs
+
+        nextPrefix = ev : prefix
+
+        nextOpts = opts{optMatches = optMatches - 1}
+
+        result = GrepResult {
+                resTime    = time
+            ,   resChannel = evChannel
+            ,   resNick    = evNick
+            ,   resMessage = evMsg
+            ,   resPrefix  = reverse $ getContext prefix
+            ,   resSuffix  = getContext evs
+            }
+
+        getContext = take optContext . map format . filter sameChannel
+
+        sameChannel (_, Shout c _ _) = c == evChannel
+        sameChannel _                = False
+
+        format (t, Shout _ n m) = (t, n, m)
+        format _                = error "Impossible non-shout"
+match opts prefix (_:evs) = match opts prefix evs
+
+describe :: GrepResult -> [T.Text]
+describe GrepResult{..} =  map format resPrefix
+                        ++ format (resTime, resNick, resMessage)
+                        :  map format resSuffix
+    where
+    format (time, nick, msg) = T.concat [
+            T.pack $ show time, " " , resChannel, " ", nick, "> ", msg
+        ]
