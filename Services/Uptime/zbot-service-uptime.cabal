@@ -1,0 +1,32 @@
+name:            zbot-service-uptime
+version:         3.0
+license:         MIT
+license-file:    ../../LICENSE
+author:          Will Coster <willcoster@gmail.com>, Jesse Frankley <number.dot.10@gmail.com>
+maintainer:      Will Coster <willcoster@gmail.com>, Jesse Frankley <number.dot.10@gmail.com>
+synopsis:        A service that reports the bot's uptime.
+description:     See README.md
+category:        IRC
+cabal-version:   >= 1.10
+build-type:      Simple
+
+library
+    build-depends:
+            base                      >= 4.3      && < 5
+        ,   mtl                       >= 2.1
+        ,   text                      >= 1.2
+        ,   time                      >= 1.4.0
+        ,   transformers              >= 0.3
+        ,   zbot-core                 == 3.0
+        ,   zbot-extras               == 3.0
+
+    exposed-modules:
+            Zbot.Service.Uptime
+
+    ghc-options: -W -Werror
+
+    default-extensions:
+        OverloadedStrings
+
+    default-language:    Haskell2010
+

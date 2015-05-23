@@ -37,5 +37,5 @@ oprah (Shout channel _ "!oprah") = lift $ do
     where
         giveOp nick = do
             addChannelMode channel [Op nick]
-            shout channel $ "You get an OP!"
+            shout channel "You get an OP!"
 oprah _                          = return()

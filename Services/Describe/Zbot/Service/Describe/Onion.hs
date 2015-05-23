@@ -2,6 +2,7 @@ module Zbot.Service.Describe.Onion (
     describeOnion
 ) where
 
+import Zbot.Extras.Scrape
 import Zbot.Service.Describe
 
 import Text.HTML.Scalpel
@@ -9,7 +10,7 @@ import Text.HTML.Scalpel
 import qualified Data.Text as T
 
 
-onionInfix = "theonion.com/articles/"
+onionInfix = T.pack "theonion.com/articles/"
 
 describeOnion :: Describer
 describeOnion url
@@ -18,6 +19,6 @@ describeOnion url
 
 title :: Scraper T.Text T.Text
 title = do
-    fullTitle <- text $ ("title" :: T.Text)
+    fullTitle <- text "title"
     let shortTitle = T.strip $ T.takeWhile ('|' /=) fullTitle
-    return $ "Breaking News: " `T.append` shortTitle
+    return $ T.pack "Breaking News: " `T.append` shortTitle

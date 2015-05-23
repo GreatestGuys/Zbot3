@@ -24,7 +24,7 @@ instance MonadState EngineState MockBot where
     put = lift . put
 
 instance Irc MockBot where
-    sendMessage priority message = do
+    sendMessage priority message =
         liftIO $ T.putStr $ T.concat [
                 "[->IRC] "
             ,   "(", T.pack $ show priority, ") "

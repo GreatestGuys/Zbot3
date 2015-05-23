@@ -16,7 +16,9 @@ import Control.Monad.State
 import Control.Monad.Trans.Maybe
 import System.IO
 
+import qualified Data.ByteString as BS
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.Text.IO as T
 import qualified Network
 
@@ -60,7 +62,13 @@ processInput :: NetworkedBot ()
 processInput = do
     socket <- lift $ gets socket
     void $ runMaybeT $ do
-        rawMessage <- liftIO $ T.hGetLine socket
+        rawMessage <- liftIO $ safeHGetLine socket
         message <- MaybeT $ return $ parse $ rawMessage `T.append` "\x0a"
         events <- lift $ stepEngine message
         lift $ mapM_ processEvent events
+
+safeHGetLine :: MonadIO io => Handle -> io T.Text
+safeHGetLine handle = do
+    line <- liftIO $ BS.hGetLine handle
+    -- If unable to decode this line, move on to the next one.
+    either (const $ safeHGetLine handle) return $ T.decodeUtf8' line

@@ -16,6 +16,7 @@ import Zbot.Core.Irc
 import Control.Applicative
 import Control.Monad.State
 
+import qualified Control.Monad.Catch as Catch
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 
@@ -38,7 +39,13 @@ data ServiceMeta a = ServiceMeta {
     }
 
 newtype MonadService s m b = MkMonadService (StateT (ServiceMeta s) m b)
-    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO)
+    deriving (Applicative,
+              Catch.MonadCatch,
+              Catch.MonadThrow,
+              Functor,
+              Monad,
+              MonadIO,
+              MonadTrans)
 
 instance (Applicative m, Monad m) => MonadState s (MonadService s m) where
     get = MkMonadService $ metaValue <$> get
@@ -52,18 +59,20 @@ serviceName :: (Applicative m, Monad m) => MonadService a m T.Text
 serviceName = MkMonadService $ metaName <$> get
 
 -- | A Collective is a group of managed services that can process IRC events.
-class Collective m where
+class (Applicative m, Functor m, Monad m) => Collective m where
 
     -- | An opaque handle that can be used to run operations in a state monad
-    -- containing the state of the corresponding service.
-    data Handle :: * -> *
+    -- containing the state of the corresponding service. The first parameter is
+    -- the type of the collective, and the second is the type of the service's
+    -- state.
+    data Handle :: (* -> *) -> * -> *
 
     -- | Register a new service with the collective.
-    registerService :: Monad m => Service m a -> m (Handle a)
+    registerService :: Monad m => Service m a -> m (Handle m a)
 
     -- | Run an operation in a state monad contain the state of the given
     -- service. Any changes to the state will be persisted.
-    run :: Monad m => Handle a -> MonadService a m b -> m b
+    run :: Monad m => Handle m a -> MonadService a m b -> m b
 
     -- | Process an event by propagating it to each of the registered services.
     processEvent :: Monad m => Event -> m ()

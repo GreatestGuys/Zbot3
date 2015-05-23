@@ -37,7 +37,10 @@ data EngineState = EngineState {
 } deriving (Eq, Ord, Read, Show)
 
 -- | A Monad that is capable of running an IRC engine.
-class (Monad r, MonadState EngineState r) => Irc r where
+class (Applicative r,
+       Functor r,
+       Monad r,
+       MonadState EngineState r) => Irc r where
 
     -- | Send an IRC message with a given priority.
     sendMessage :: Priority -> Message -> r ()
