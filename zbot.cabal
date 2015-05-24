@@ -1,0 +1,102 @@
+name:            zbot
+version:         3.0
+license:         MIT
+license-file:    LICENSE
+author:
+        Will Coster <willcoster@gmail.com>
+    ,   Jesse Frankley <number.dot.10@gmail.com>
+maintainer:
+        Will Coster <willcoster@gmail.com>
+    ,   Jesse Frankley <number.dot.10@gmail.com>
+synopsis:        An IRC Bot.
+description:     See README.md
+category:        IRC
+cabal-version:   >= 1.10
+build-type:      Simple
+
+executable zbot
+    main-is:            zbot/Main.hs
+    ghc-options:        -W
+    default-language:   Haskell2010
+
+    build-depends:
+            base >= 4.3 && < 5
+        ,   zbot
+
+library
+    ghc-options:        -W
+    default-extensions: OverloadedStrings
+    default-language:   Haskell2010
+    hs-source-dirs:     src/
+
+    build-depends:
+            aeson
+        ,   HTTP
+        ,   attoparsec
+        ,   base                 >= 4.3 && < 5
+        ,   base16-bytestring
+        ,   binary
+        ,   bytestring
+        ,   containers
+        ,   cryptohash
+        ,   curl
+        ,   directory
+        ,   exceptions
+        ,   filepath
+        ,   mmap
+        ,   mtl
+        ,   network
+        ,   optparse-applicative
+        ,   random
+        ,   random-fu
+        ,   regex-tdfa
+        ,   regex-tdfa-text
+        ,   safe
+        ,   scalpel              >= 0.2
+        ,   text
+        ,   time
+        ,   transformers
+        ,   unix
+        ,   utf8-string
+
+    exposed-modules:
+            Zbot.Cli
+        ,   Zbot.Core.Bot
+        ,   Zbot.Core.Bot.Mock
+        ,   Zbot.Core.Irc
+        ,   Zbot.Core.Service
+        ,   Zbot.Extras.Command
+        ,   Zbot.Extras.Message
+        ,   Zbot.Extras.Regex
+        ,   Zbot.Extras.Scrape
+        ,   Zbot.Extras.Time
+        ,   Zbot.Extras.UnitService
+        ,   Zbot.Service.Define
+        ,   Zbot.Service.Describe
+        ,   Zbot.Service.Describe.Default
+        ,   Zbot.Service.Describe.Onion
+        ,   Zbot.Service.Describe.Spotify
+        ,   Zbot.Service.Describe.Twitter
+        ,   Zbot.Service.Describe.YouTube
+        ,   Zbot.Service.Grep
+        ,   Zbot.Service.History
+        ,   Zbot.Service.Lists
+        ,   Zbot.Service.NGram
+        ,   Zbot.Service.Op
+        ,   Zbot.Service.Replace
+        ,   Zbot.Service.Reputation
+        ,   Zbot.Service.Roll
+        ,   Zbot.Service.Seen
+        ,   Zbot.Service.Uptime
+
+    other-modules:
+            Zbot.Core.Bot.Networked
+        ,   Zbot.Core.Bot.Types
+        ,   Zbot.Core.Irc.Engine
+        ,   Zbot.Core.Irc.Protocol
+        ,   Zbot.Core.Irc.Types
+        ,   Zbot.Core.Service.IO
+        ,   Zbot.Core.Service.Types
+        ,   Zbot.Service.History.Entry
+        ,   Zbot.Service.History.Log
+        ,   Zbot.Service.NGram.Model

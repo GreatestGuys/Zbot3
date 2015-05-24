@@ -1,5 +1,0 @@
-./Cli
-./Core
-./Example
-./Extras
-./Services
