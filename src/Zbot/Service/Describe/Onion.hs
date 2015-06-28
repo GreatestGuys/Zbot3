@@ -11,7 +11,7 @@ import Text.HTML.Scalpel
 import qualified Data.Text as T
 
 
-onionInfix = T.pack "theonion.com/articles/"
+onionInfix = T.pack "theonion.com"
 
 describeOnion :: Describer
 describeOnion url
@@ -21,5 +21,5 @@ describeOnion url
 title :: Scraper T.Text T.Text
 title = do
     fullTitle <- text "title"
-    let shortTitle = T.strip $ T.takeWhile ('|' /=) fullTitle
+    let shortTitle = T.strip $ T.takeWhile ('-' /=) fullTitle
     return $ T.pack "Breaking News: " `T.append` shortTitle
