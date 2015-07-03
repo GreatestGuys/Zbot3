@@ -2,6 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Zbot.Core.Bot.Networked (
     NetworkedBot
+,   RateLimit
 ,   runNetworkedBot
 ) where
 
@@ -12,10 +13,12 @@ import Zbot.Core.Irc.Protocol
 import Zbot.Core.Service.IO
 import Zbot.Core.Service.Types hiding (Handle)
 
+import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.State
 import Control.Monad.Trans.Maybe
 import System.IO
 
+import qualified Control.Concurrent.Chan as Chan
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -24,19 +27,25 @@ import qualified Network
 
 
 data NetworkState = NetworkState {
-    socket :: Handle
+    socket         :: Handle
+,   messageChannel :: Chan.Chan Message
 }
 
 type NetworkedBot = IOCollective (StateT NetworkState (StateT EngineState IO))
+
+type RateLimit = Int
 
 instance MonadState EngineState NetworkedBot where
     get = lift $ lift get
     put = lift . lift . put
 
 instance Irc NetworkedBot where
-    sendMessage _ message = do
+    sendMessage RealTime   message = do
         socket <- lift $ gets socket
         liftIO $ T.hPutStr socket (render message)
+    sendMessage BestEffort message = do
+        messageChannel <- lift $ gets messageChannel
+        liftIO $ Chan.writeChan messageChannel message
 
 instance Bot NetworkedBot where
 
@@ -45,14 +54,17 @@ runNetworkedBot :: Server
                 -> Nick
                 -> User
                 -> FilePath
+                -> RateLimit
                 -> NetworkedBot ()
                 -> IO ()
-runNetworkedBot server port nick user dataDir botInit = do
+runNetworkedBot server port nick user dataDir rateLimit botInit = do
     socket <- Network.connectTo server $ Network.PortNumber (fromIntegral port)
     hSetBuffering socket NoBuffering
     hSetEncoding socket utf8
+    messageChannel <- Chan.newChan
+    forkIO (writeLoop socket messageChannel rateLimit)
     flip evalStateT undefined $
-        flip evalStateT (NetworkState socket) $
+        flip evalStateT (NetworkState socket messageChannel) $
             runIOCollective dataDir $ do
                 startEngine nick user
                 botInit
@@ -66,6 +78,12 @@ processInput = do
         message <- MaybeT $ return $ parse $ rawMessage `T.append` "\x0a"
         events <- lift $ stepEngine message
         lift $ mapM_ processEvent events
+
+writeLoop :: Handle -> Chan.Chan Message -> RateLimit -> IO ()
+writeLoop socket messageChannel rateLimit = forever $ do
+    message <- Chan.readChan messageChannel
+    T.hPutStr socket (render message)
+    threadDelay (1000000 `div` rateLimit)
 
 safeHGetLine :: MonadIO io => Handle -> io T.Text
 safeHGetLine handle = do
