@@ -9,6 +9,7 @@ module Zbot.Core.Irc (
 ,   Channel
 ,   ChannelMode (..)
 
+,   myNick
 ,   nicks
 ,   channels
 ,   whisper
@@ -31,6 +32,10 @@ import Data.Maybe
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 
+
+-- | The current nick of the bot.
+myNick :: Irc irc => irc Nick
+myNick = gets engineStateNick
 
 -- | A list of all nicks in a given channel.
 nicks :: Irc irc => Channel -> irc [Nick]

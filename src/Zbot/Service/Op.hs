@@ -7,6 +7,7 @@ import Zbot.Core.Irc
 import Zbot.Core.Service
 import Zbot.Extras.UnitService
 
+import Control.Applicative ((<$>))
 import Control.Monad.Trans.Class (lift)
 
 import qualified Data.Text as T
@@ -32,8 +33,10 @@ ascend _                              = return()
 
 oprah :: Bot m => Event -> MonadService () m ()
 oprah (Shout channel _ "!oprah") = lift $ do
-    allNicks <- nicks channel
+    n <- myNick
+    allNicks <- filter (/= n) <$> nicks channel
     mapM_ giveOp allNicks
+    shout channel "Everybody gets an OP!"
     where
         giveOp nick = do
             addChannelMode channel [Op nick]

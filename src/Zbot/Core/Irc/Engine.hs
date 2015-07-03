@@ -17,6 +17,7 @@ import Zbot.Core.Irc.Types
 import Control.Applicative
 import Control.Monad.State
 import Control.Monad.Writer
+import Data.Maybe (maybeToList)
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
@@ -31,9 +32,10 @@ data ChannelState = ChannelState {
 } deriving (Eq, Ord, Show, Read)
 
 data EngineState = EngineState {
-    engineStateChannels :: Map.Map Channel ChannelState
-,   engineStateNick     :: Nick
-,   engineStateUser     :: User
+    engineStateChannels     :: Map.Map Channel ChannelState
+,   engineStateChannelsTemp :: Map.Map Channel ChannelState
+,   engineStateNick         :: Nick
+,   engineStateUser         :: User
 } deriving (Eq, Ord, Read, Show)
 
 -- | A Monad that is capable of running an IRC engine.
@@ -55,7 +57,7 @@ emptyChannelState = ChannelState [] []
 startEngine :: Irc irc => Nick -> User -> irc ()
 startEngine nick user = put state >> mapM_ (sendMessage RealTime) outgoing
     where
-        state       = EngineState Map.empty nick user
+        state       = EngineState Map.empty Map.empty nick user
         outgoing    = [nickMessage, userMessage]
         nickMessage = Message {
                 prefix     = Nothing
@@ -89,6 +91,7 @@ handlers = [
     ,   pingPongHandler
     ,   privmsgHandler
     ,   welcomeHandler
+    ,   stalkerHandler
     ]
 
 -- | A handler that handles incoming PING commands and responds with a PONG
@@ -161,6 +164,47 @@ welcomeHandler :: Irc irc => Message -> WriterT [Event] irc ()
 welcomeHandler Message {command="001"} = tell [Initialize]
 welcomeHandler _                       = return ()
 
+stalkerHandler :: Irc irc => Message -> WriterT [Event] irc ()
+stalkerHandler Message {command = "QUIT"} = lift sendNames
+stalkerHandler Message {command = "PART"} = lift sendNames
+stalkerHandler Message {command = "NICK"} = lift sendNames
+stalkerHandler Message {command = "JOIN"} = lift sendNames
+stalkerHandler Message {command = "MODE"} = lift sendNames
+stalkerHandler Message {command = "366", parameters = (_:channel:_)} =
+    lift $ finishAddingNicksChannel channel
+stalkerHandler Message {
+            command    = "353"
+        ,   parameters = (_:_:channel:nicks)
+        ,   trailing   = trailing
+        } = lift $ addNicksToChannel channel (nicks ++ maybeToList trailing)
+stalkerHandler _                          = return ()
+
+sendNames :: Irc irc => irc ()
+sendNames = channels >>= mapM_ sendName
+    where
+        sendName ch = sendMessage BestEffort Message {
+            prefix     = Nothing
+        ,   command    = "NAMES"
+        ,   parameters = [ch]
+        ,   trailing   = Nothing
+        }
+        channels = gets (Map.keys . engineStateChannels)
+
+addNicksToChannel :: Irc irc => Channel -> [Nick] -> irc ()
+addNicksToChannel channel = mapM_ (modify . modifyTempChannel channel . addNick)
+    where
+        addNick nick channelState = channelState {
+                channelStateNicks = formatNick nick
+                                  : channelStateNicks channelState
+            }
+        formatNick nick
+            | "@" `T.isPrefixOf` nick = T.drop 1 nick
+            | "+" `T.isPrefixOf` nick = T.drop 1 nick
+            | otherwise               = nick
+
+finishAddingNicksChannel :: Irc irc => Channel -> irc ()
+finishAddingNicksChannel channel = modify (swapChannelWithTemp channel)
+
 --------------------------------------------------------------------------------
 -- Handler utility methods.
 
@@ -174,6 +218,33 @@ modifyChannel :: Channel
               -> (ChannelState -> ChannelState)
               -> EngineState -> EngineState
 modifyChannel channel f engineState = engineState {
-        engineStateChannels = Map.adjust f channel
+        engineStateChannels = adjustWithDefault emptyChannelState f channel
                             $ engineStateChannels engineState
     }
+
+modifyTempChannel :: Channel
+                  -> (ChannelState -> ChannelState)
+                  -> EngineState -> EngineState
+modifyTempChannel channel f engineState = engineState {
+        engineStateChannelsTemp = adjustWithDefault emptyChannelState f channel
+                                $ engineStateChannelsTemp engineState
+    }
+
+swapChannelWithTemp :: Channel -> EngineState -> EngineState
+swapChannelWithTemp channel engineState = engineState {
+        engineStateChannels     = Map.insert channel newChannelState
+                                $ engineStateChannels engineState
+    ,   engineStateChannelsTemp = Map.delete channel
+                                $ engineStateChannelsTemp engineState
+    }
+    where newChannelState = Map.findWithDefault
+            emptyChannelState
+            channel
+            (engineStateChannelsTemp engineState)
+
+adjustWithDefault :: Ord k => v -> (v -> v) -> k -> Map.Map k v -> Map.Map k v
+adjustWithDefault initial f = Map.alter f'
+    where
+        f' Nothing  = Just $ f initial
+        f' (Just v) = Just $ f v
+

@@ -33,6 +33,7 @@ data NetworkState = NetworkState {
 
 type NetworkedBot = IOCollective (StateT NetworkState (StateT EngineState IO))
 
+-- | The maximum number of `BestEffort` messages to send per second.
 type RateLimit = Int
 
 instance MonadState EngineState NetworkedBot where
@@ -40,12 +41,22 @@ instance MonadState EngineState NetworkedBot where
     put = lift . lift . put
 
 instance Irc NetworkedBot where
-    sendMessage RealTime   message = do
+    sendMessage RealTime message = do
         socket <- lift $ gets socket
         liftIO $ T.hPutStr socket (render message)
+--        liftIO $ T.putStr $ T.concat [
+--                "[->IRC] "
+--            ,   "(", T.pack $ show RealTime, ") "
+--            ,   render message
+--            ]
     sendMessage BestEffort message = do
         messageChannel <- lift $ gets messageChannel
         liftIO $ Chan.writeChan messageChannel message
+--        liftIO $ T.putStr $ T.concat [
+--                "[->IRC] "
+--            ,   "(", T.pack $ show BestEffort, ") "
+--            ,   render message
+--            ]
 
 instance Bot NetworkedBot where
 
@@ -76,6 +87,10 @@ processInput = do
     void $ runMaybeT $ do
         rawMessage <- liftIO $ safeHGetLine socket
         message <- MaybeT $ return $ parse $ rawMessage `T.append` "\x0a"
+--        liftIO $ T.putStr $ T.concat [
+--                "[<-IRC] "
+--            ,   render message
+--            ]
         events <- lift $ stepEngine message
         lift $ mapM_ processEvent events
 
