@@ -44,5 +44,5 @@ main = zbotMain $ do
     registerService_ reputation
     registerService_ roll
     registerService_ $ seen historyHandle
-    registerService_ summary
+    registerService_ $ summary historyHandle
     uptime >>= registerService_
