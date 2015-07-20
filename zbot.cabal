@@ -88,6 +88,7 @@ library
         ,   Zbot.Service.Reputation
         ,   Zbot.Service.Roll
         ,   Zbot.Service.Seen
+        ,   Zbot.Service.Summary
         ,   Zbot.Service.Uptime
 
     other-modules:

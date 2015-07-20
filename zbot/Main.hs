@@ -4,7 +4,6 @@ where
 import Zbot.Cli
 import Zbot.Core.Service
 import Zbot.Service.Define
-import Zbot.Service.Help
 import Zbot.Service.Describe
 import Zbot.Service.Describe.Default
 import Zbot.Service.Describe.Onion
@@ -12,6 +11,7 @@ import Zbot.Service.Describe.Spotify
 import Zbot.Service.Describe.Twitter
 import Zbot.Service.Describe.YouTube
 import Zbot.Service.Grep
+import Zbot.Service.Help
 import Zbot.Service.History
 import Zbot.Service.Lists
 import Zbot.Service.NGram
@@ -20,6 +20,7 @@ import Zbot.Service.Replace
 import Zbot.Service.Reputation
 import Zbot.Service.Roll
 import Zbot.Service.Seen
+import Zbot.Service.Summary
 import Zbot.Service.Uptime
 
 
@@ -43,4 +44,5 @@ main = zbotMain $ do
     registerService_ reputation
     registerService_ roll
     registerService_ $ seen historyHandle
+    registerService_ summary
     uptime >>= registerService_
