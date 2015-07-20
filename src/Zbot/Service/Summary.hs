@@ -57,7 +57,7 @@ performSummary reply url = lift $ do
     maybeModel <- liftIO $ modelFromUrl url
     maybe replyError replyUttrance maybeModel
     where
-        replyError = reply "Couldn't make heads or tails of it, sorry :("
+        replyError = reply "That doesn't look like an article to me."
         replyUttrance model =   liftIO (sample $ detokenize <$> generate model)
                             >>= reply
 
