@@ -79,6 +79,7 @@ library
         ,   Zbot.Service.Describe.Twitter
         ,   Zbot.Service.Describe.YouTube
         ,   Zbot.Service.Grep
+        ,   Zbot.Service.Help
         ,   Zbot.Service.History
         ,   Zbot.Service.Lists
         ,   Zbot.Service.NGram

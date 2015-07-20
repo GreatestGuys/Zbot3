@@ -28,8 +28,9 @@ import qualified Data.Text.Encoding as T
 
 
 data IOCollectiveMeta m = IOCollectiveMeta {
-        metaDataDir  :: FilePath
-    ,   metaHandlers :: [Event -> IOCollective m ()]
+        metaDataDir   :: FilePath
+    ,   metaHandlers  :: [Event -> IOCollective m ()]
+    ,   metaHelpSpecs :: [(T.Text, Maybe HelpSpec)]
     }
 
 newtype IOCollective m a = MkIOCollective
@@ -59,11 +60,14 @@ instance (Applicative io,
             let serviceDataDir = dataDir </> (normalize (name service) ++ ".d")
             liftIO $ createDirectoryIfMissing True serviceDataDir
             ioref <- liftIO $ newIORef (serviceMeta, service)
-            modify $ addHandler (makeHandler ioref)
+            modify $ addHandlerAndHelp
+                        (makeHandler ioref)
+                        (name service, helpSpec service)
             return $ MkHandle ioref
         where
-            addHandler handler meta = meta {
+            addHandlerAndHelp handler help meta = meta {
                     metaHandlers = metaHandlers meta ++ [handler]
+                ,   metaHelpSpecs = help : metaHelpSpecs meta
                 }
             makeHandler ioref event = suppressErrors event $ do
                 (m, s) <- liftIO $ readIORef ioref
@@ -103,6 +107,8 @@ instance (Applicative io,
         serviceName <- gets metaName
         return $ dataDir </> (normalize serviceName ++ ".d")
                          </> normalize fileName
+
+    helpSpecs = MkIOCollective $ gets metaHelpSpecs
 
 writeToSaveFile :: MonadIO io
                 => ServiceMeta a
@@ -144,7 +150,7 @@ normalize name = concat [
 runIOCollective :: MonadIO io => FilePath -> IOCollective io a -> io a
 runIOCollective dataDir (MkIOCollective value) = do
     liftIO $ createDirectoryIfMissing True dataDir
-    evalStateT value $ IOCollectiveMeta dataDir []
+    evalStateT value $ IOCollectiveMeta dataDir [] []
 
 touchFile :: FilePath -> IO ()
 touchFile = (`BS.appendFile` BS.empty)

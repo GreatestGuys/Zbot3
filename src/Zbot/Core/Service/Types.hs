@@ -8,6 +8,7 @@ module Zbot.Core.Service.Types (
 ,   Service (..)
 ,   ServiceMeta (..)
 ,   MonadService (..)
+,   HelpSpec (..)
 ,   serviceName
 ) where
 
@@ -31,7 +32,15 @@ data Service m a = (Irc m, Collective m) => Service {
     ,   deserialize :: BS.ByteString -> Maybe a
     ,   name        :: T.Text
     ,   process     :: Event -> MonadService a m ()
+    ,   helpSpec    :: Maybe HelpSpec
     }
+
+-- | A HelpSpec is a list of lines of text that are returned when a user
+-- queries the documentation for a given service.
+data HelpSpec = HelpSpec {
+        helpAliases :: [T.Text]
+    ,   helpMessage :: [T.Text]
+    } deriving (Show)
 
 data ServiceMeta a = ServiceMeta {
         metaValue :: a
@@ -79,3 +88,7 @@ class (Applicative m, Functor m, Monad m) => Collective m where
 
     -- | Obtain the sandboxed file path for a given file name.
     sandboxedFilePath :: Monad m => T.Text -> MonadService a m FilePath
+
+    -- | Return a list of tuples containing the service name, and the
+    -- corresponding HelpSpec.
+    helpSpecs :: m [(T.Text, Maybe HelpSpec)]

@@ -28,6 +28,7 @@ history =
         ,   deserialize = const Nothing
         ,   name        = "Zbot.Service.History"
         ,   process     = handleEvent
+        ,   helpSpec    = Nothing
         }
 
 logFileName :: T.Text

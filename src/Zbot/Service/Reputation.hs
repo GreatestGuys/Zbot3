@@ -31,6 +31,26 @@ reputation = Service {
     ,   deserialize = deserializeReputation
     ,   name        = "Zbot.Service.Reputation"
     ,   process     = onMessage handler
+    ,   helpSpec    = Just HelpSpec {
+            helpAliases      = ["!rep", "+1", "-1"]
+        ,   helpMessage      = [
+            "usage: +1 [nick]"
+        ,   "       -1 [nick]"
+        ,   "       !rep [nick]"
+        ,   ""
+        ,   "   The reputation service keeps track of the 'reputation' of"
+        ,   "users in the channel. Reputation here being an arbitrary integer"
+        ,   "value. Users can grant each other reputation via the `+1` command."
+        ,   "If no user is supplied, the last nick that spoke something other"
+        ,   "than a `+1` command will gain 1 reputation point. If a nick is"
+        ,   "supplied, then that nick will be granted the point."
+        ,   ""
+        ,   "   The !rep command is used to query reputation scores. If no nick"
+        ,   "Is given, then the reputation score of all known nicks will be"
+        ,   "displayed. Otherwise, if a nick is given, then only the reputation"
+        ,   "score for that user is displayed."
+        ]
+        }
     }
 
 serializeReputation :: Reputation -> Maybe BS.ByteString

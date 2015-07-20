@@ -4,6 +4,7 @@ where
 import Zbot.Cli
 import Zbot.Core.Service
 import Zbot.Service.Define
+import Zbot.Service.Help
 import Zbot.Service.Describe
 import Zbot.Service.Describe.Default
 import Zbot.Service.Describe.Onion
@@ -33,6 +34,7 @@ main = zbotMain $ do
         ,   describeYouTube
         ,   describeDefault
         ]
+    registerService_ help
     registerService_ $ grep historyHandle
     registerService_ lists
     ngram historyHandle >>= registerService_

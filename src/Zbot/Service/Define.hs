@@ -20,7 +20,12 @@ import qualified Network.HTTP as HTTP
 
 
 define :: (MonadIO m, Bot m) => Service m ()
-define = unitService "Zbot.Service.Define" $ onCommand "!define" lookupTerm
+define = (unitService "Zbot.Service.Define" (onCommand "!define" lookupTerm)) {
+        helpSpec = Just HelpSpec {
+                helpAliases = ["!define"]
+            ,   helpMessage = ["usage: !define word"]
+            }
+    }
 
 lookupTerm :: (MonadIO m, Bot m) => Reply m -> T.Text -> MonadService s m ()
 lookupTerm reply term = do

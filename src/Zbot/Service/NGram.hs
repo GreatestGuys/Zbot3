@@ -28,7 +28,13 @@ type NGramModel = Model 3 T.Text
 ngram :: (MonadIO m, Bot m) => Handle m History -> m (Service m ())
 ngram history = do
     models <- buildNGramModels history
-    return $ unitService "Zbot.Service.NGram" (onCommand "!be" $ handler models)
+    return $
+      (unitService "Zbot.Service.NGram" (onCommand "!be" $ handler models)) {
+            helpSpec    = Just HelpSpec {
+                helpAliases      = ["!be"]
+            ,   helpMessage      = ["usage: !be nick"]
+            }
+        }
 
 handler :: (MonadIO m, Bot m)
         => Map.Map Nick NGramModel -> Reply m -> T.Text -> MonadService () m ()

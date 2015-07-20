@@ -29,6 +29,7 @@ lists = Service {
     ,   deserialize = deserializeLists
     ,   name        = "Zbot.Service.Lists"
     ,   process     = onCommand "!list" listsCommand
+    ,   helpSpec    = Nothing
     }
 
 serializeLists :: Lists -> Maybe BS.ByteString

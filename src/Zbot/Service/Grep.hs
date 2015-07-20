@@ -25,7 +25,19 @@ import qualified Data.Text as T
 -- | A service that will grant ops to users on the current channel.
 grep :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 grep historyHandle =
-    unitService "Zbot.Service.Grep" (onCommand "!grep" grepCommand)
+    (unitService "Zbot.Service.Grep" (onCommand "!grep" grepCommand)) {
+        helpSpec = Just HelpSpec {
+                helpAliases = ["!grep"]
+            ,   helpMessage = [T.intercalate " " [
+                        "usage: !grep"
+                    ,   "[-c context]"
+                    ,   "[-C channel]"
+                    ,   "[-n nick]"
+                    ,   "[-m matches]"
+                    ,   "regex"
+                    ]]
+            }
+    }
     where
         grepCommand reply args = lift $ do
             let opts = parse args defaultOptions

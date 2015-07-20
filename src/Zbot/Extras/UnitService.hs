@@ -16,4 +16,5 @@ unitService name process = Service {
     ,   deserialize = const Nothing
     ,   name        = name
     ,   process     = process
+    ,   helpSpec    = Nothing
     }

@@ -1,8 +1,9 @@
 module Zbot.Core.Service (
-    Collective (registerService, run, sandboxedFilePath)
+    Collective (registerService, run, sandboxedFilePath, helpSpecs)
 ,   Handle
 ,   Service (..)
 ,   MonadService
+,   HelpSpec (..)
 
 ,   registerService_
 ) where
