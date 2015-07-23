@@ -16,6 +16,7 @@ import Zbot.Service.History
 import Zbot.Service.Lists
 import Zbot.Service.NGram
 import Zbot.Service.Op
+import Zbot.Service.Remind
 import Zbot.Service.Replace
 import Zbot.Service.Reputation
 import Zbot.Service.Roll
@@ -40,6 +41,7 @@ main = zbotMain $ do
     registerService_ lists
     ngram historyHandle >>= registerService_
     registerService_ op
+    registerService_ remind
     registerService_ $ replace historyHandle
     registerService_ reputation
     registerService_ roll

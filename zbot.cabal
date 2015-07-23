@@ -69,6 +69,7 @@ library
         ,   Zbot.Extras.Message
         ,   Zbot.Extras.Regex
         ,   Zbot.Extras.Scrape
+        ,   Zbot.Extras.Serialize
         ,   Zbot.Extras.Time
         ,   Zbot.Extras.UnitService
         ,   Zbot.Service.Define
@@ -84,6 +85,7 @@ library
         ,   Zbot.Service.Lists
         ,   Zbot.Service.NGram
         ,   Zbot.Service.Op
+        ,   Zbot.Service.Remind
         ,   Zbot.Service.Replace
         ,   Zbot.Service.Reputation
         ,   Zbot.Service.Roll

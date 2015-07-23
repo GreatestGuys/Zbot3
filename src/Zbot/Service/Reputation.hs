@@ -7,23 +7,19 @@ import Zbot.Core.Bot
 import Zbot.Core.Irc
 import Zbot.Core.Service
 import Zbot.Extras.Message
+import Zbot.Extras.Serialize
 
-import Control.Applicative ((<$>))
 import Control.Monad.State
 import Data.List (sortBy)
 import Data.Maybe (fromMaybe)
-import Safe (readMay)
 
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Data.Text as T
 
 
-newtype Reputation = MkReputation (Map.Map Nick Int)
+newtype Reputation = MkReputation (Map.Map Nick Int) deriving (Read, Show)
 
--- | The lists service allows users to keep lists of things. It can be queried
--- with the !list command.
 reputation :: Bot m => Service m Reputation
 reputation = Service {
         initial     = MkReputation Map.empty
@@ -54,10 +50,10 @@ reputation = Service {
     }
 
 serializeReputation :: Reputation -> Maybe BS.ByteString
-serializeReputation (MkReputation m) = Just $ BS.fromString $ show m
+serializeReputation (MkReputation m) = serializeShow m
 
 deserializeReputation :: BS.ByteString -> Maybe Reputation
-deserializeReputation bs = MkReputation <$> readMay (BS.toString bs)
+deserializeReputation = fmap MkReputation . deserializeRead
 
 handler :: Bot m => Reply m -> T.Text -> MonadService Reputation m ()
 handler reply msg
