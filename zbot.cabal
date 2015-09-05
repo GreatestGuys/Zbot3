@@ -30,8 +30,8 @@ library
     hs-source-dirs:     src/
 
     build-depends:
-            aeson
-        ,   HTTP
+            HTTP
+        ,   aeson
         ,   attoparsec
         ,   base                 >= 4.3 && < 5
         ,   base16-bytestring
@@ -40,9 +40,12 @@ library
         ,   containers
         ,   cryptohash
         ,   curl
+        ,   data-default
         ,   directory
         ,   exceptions
         ,   filepath
+        ,   lens
+        ,   lens-aeson
         ,   mmap
         ,   mtl
         ,   network
@@ -58,6 +61,7 @@ library
         ,   transformers
         ,   unix
         ,   utf8-string
+        ,   wreq
 
     exposed-modules:
             Zbot.Cli
@@ -79,6 +83,7 @@ library
         ,   Zbot.Service.Describe.Spotify
         ,   Zbot.Service.Describe.Twitter
         ,   Zbot.Service.Describe.YouTube
+        ,   Zbot.Service.GitHub
         ,   Zbot.Service.Grep
         ,   Zbot.Service.Help
         ,   Zbot.Service.History

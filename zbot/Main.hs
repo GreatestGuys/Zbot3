@@ -11,6 +11,7 @@ import Zbot.Service.Describe.Spotify
 import Zbot.Service.Describe.Twitter
 import Zbot.Service.Describe.YouTube
 import Zbot.Service.Grep
+import Zbot.Service.GitHub
 import Zbot.Service.Help
 import Zbot.Service.History
 import Zbot.Service.Lists
@@ -36,8 +37,9 @@ main = zbotMain $ do
         ,   describeYouTube
         ,   describeDefault
         ]
-    registerService_ help
+    registerService_ github
     registerService_ $ grep historyHandle
+    registerService_ help
     registerService_ lists
     ngram historyHandle >>= registerService_
     registerService_ op
