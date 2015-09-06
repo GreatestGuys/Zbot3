@@ -11,6 +11,8 @@ import Zbot.Extras.UnitService
 import Control.Applicative
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)
+import Control.Monad (guard)
 import Data.Char (toLower)
 import Data.List (isPrefixOf)
 import Text.HTML.Scalpel
@@ -37,11 +39,13 @@ tryIOMaybes []     = return Nothing
 tryIOMaybes (x:xs) = x >>= maybe (tryIOMaybes xs) (return . Just)
 
 scrapeTerm :: T.Text -> IO (Maybe T.Text)
-scrapeTerm term = do
+scrapeTerm term = runMaybeT $ do
     let encodedTerm = HTTP.urlEncode $ T.unpack term
     let url = T.pack
             $ "http://www.urbandictionary.com/define.php?term=" ++ encodedTerm
-    (format term <$>) <$> scrapeURLAsDesktop url meaning
+    defn <- MaybeT $ scrapeURLAsDesktop url meaning
+    guard $ not ("There aren't any definitions" `T.isInfixOf` defn)
+    return $ format term defn
 
 scrapeRandom :: T.Text -> IO (Maybe T.Text)
 scrapeRandom term = do
