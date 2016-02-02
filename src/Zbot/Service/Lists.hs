@@ -55,10 +55,11 @@ listsCommand reply args = listsAction (T.words args)
         -- The usage message, in case no arguments are passed.
         help = mapM_ (lift . reply) [
                   "!list show [list]"
-              ,   "!list add [at index] list [element]"
-              ,   "!list rm list [element]"
-              ,   "!list check list element"
-              ,   "!list flush list"
+              ,   "!list add [list] [element]"
+              ,   "!list add at [index] [list] [element]"
+              ,   "!list rm [list] [element]"
+              ,   "!list check [list] [element]"
+              ,   "!list flush [list]"
               ]
 
         -- Displays the list of lists.
