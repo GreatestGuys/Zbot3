@@ -74,7 +74,7 @@ class (Applicative m, Functor m, Monad m) => Collective m where
     -- containing the state of the corresponding service. The first parameter is
     -- the type of the collective, and the second is the type of the service's
     -- state.
-    data Handle :: (* -> *) -> * -> *
+    data Handle m :: * -> *
 
     -- | Register a new service with the collective.
     registerService :: Monad m => Service m a -> m (Handle m a)
