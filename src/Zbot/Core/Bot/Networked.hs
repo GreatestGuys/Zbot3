@@ -98,7 +98,7 @@ writeLoop :: Handle -> Chan.Chan Message -> RateLimit -> IO ()
 writeLoop socket messageChannel rateLimit = forever $ do
     message <- Chan.readChan messageChannel
     T.hPutStr socket (render message)
-    threadDelay (1000000 `div` rateLimit)
+    when (rateLimit > 0) $ threadDelay (1000000 `div` rateLimit)
 
 safeHGetLine :: MonadIO io => Handle -> io T.Text
 safeHGetLine handle = do
