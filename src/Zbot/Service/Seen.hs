@@ -19,8 +19,10 @@ import qualified Data.Text as T
 
 -- | A service that reports the time of a user's last activity.
 seen :: (MonadIO m, Bot m) => Handle m History -> Service m ()
-seen history = unitService "Zbot.Service.Seen" (onCommand "!seen" cmd)
+seen history = unitService "Zbot.Service.Seen" (onCommand "!seen" $ strip cmd)
     where
+        strip cmd reply nick = cmd reply (T.strip nick)
+
         cmd reply nick = lift $ do
             lastTime <- findLastTime nick
             now      <- liftIO getCurrentTime
