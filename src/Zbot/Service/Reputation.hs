@@ -9,6 +9,7 @@ import Zbot.Core.Service
 import Zbot.Extras.Message
 import Zbot.Extras.Serialize
 
+import Control.Monad (mfilter)
 import Control.Monad.State
 import Data.List (sortBy)
 import Data.Maybe (fromMaybe)
@@ -69,7 +70,7 @@ handler reply msg
         minus = modifyRep (subtract 1)
 
         modifyRep f nick = wrapModify (Map.alter f' nick)
-            where f' = return . f . fromMaybe 0
+            where f' = mfilter (/= 0) . return . f . fromMaybe 0
 
         replyNickRep nick =   wrapGets (fromMaybe 0 . Map.lookup nick)
                           >>= replyRep nick
