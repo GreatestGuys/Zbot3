@@ -6,6 +6,7 @@ module Zbot.Service.Grep (
 import Zbot.Core.Bot
 import Zbot.Core.Irc
 import Zbot.Core.Service
+import Zbot.Extras.Color
 import Zbot.Extras.Command
 import Zbot.Extras.UnitService
 import Zbot.Service.History
@@ -14,6 +15,7 @@ import Control.Applicative
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Trans.Class (lift)
 import Data.List (intercalate)
+import Data.String (fromString)
 import Data.Time.Clock (UTCTime)
 import Safe (readMay)
 import Text.Regex.TDFA ((=~))
@@ -45,8 +47,8 @@ grep historyHandle =
                     <$> foldHistoryForward historyHandle historyToList []
             let matches = match opts [] history
             mapM_ reply $ reverse
-                        $ intercalate ["----"]
-                        $ map describe matches
+                        $ intercalate [colorize [fg Cyan "----"]]
+                        $ map (describe opts) matches
 
 data GrepOptions = GrepOptions {
         optContext :: Int
@@ -60,9 +62,9 @@ data GrepResult = GrepResult {
         resTime    :: UTCTime
     ,   resChannel :: Channel
     ,   resNick    :: Nick
-    ,   resMessage :: T.Text
-    ,   resPrefix  :: [(UTCTime, Nick, T.Text)]
-    ,   resSuffix  :: [(UTCTime, Nick, T.Text)]
+    ,   resMessage :: [ColorText]
+    ,   resPrefix  :: [(UTCTime, Nick, [ColorText])]
+    ,   resSuffix  :: [(UTCTime, Nick, [ColorText])]
     }
 
 defaultOptions :: GrepOptions
@@ -115,14 +117,22 @@ match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
 
         nextOpts = opts{optMatches = optMatches - 1}
 
+        colorEvMessage = let (pre, msg, suf) = evMsg =~ optQuery
+                          in [ colorText pre
+                             , fg Red $ colorText msg
+                             , colorText suf]
+
         result = GrepResult {
                 resTime    = time
             ,   resChannel = evChannel
             ,   resNick    = evNick
-            ,   resMessage = evMsg
-            ,   resPrefix  = reverse $ getContext prefix
-            ,   resSuffix  = getContext evs
+            ,   resMessage = colorEvMessage
+            ,   resPrefix  = colorContext $ reverse $ getContext prefix
+            ,   resSuffix  = colorContext $ getContext evs
             }
+
+        colorContext = map go
+            where go (a, b, c) = (a, b, [colorText c])
 
         getContext = take optContext . map format . filter sameChannel
 
@@ -133,11 +143,16 @@ match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
         format _                = error "Impossible non-shout"
 match opts prefix (_:evs) = match opts prefix evs
 
-describe :: GrepResult -> [T.Text]
-describe GrepResult{..} =  map format resPrefix
-                        ++ format (resTime, resNick, resMessage)
-                        :  map format resSuffix
+describe :: GrepOptions -> GrepResult -> [T.Text]
+describe GrepOptions{..} GrepResult{..} =
+       map format resPrefix
+    ++ format (resTime, resNick, resMessage)
+    :  map format resSuffix
     where
-    format (time, nick, msg) = T.concat [
-            T.pack $ show time, " " , resChannel, " ", nick, "> ", msg
-        ]
+    format (time, nick, msg) = colorize ([
+            fromString $ show time
+        ,   " " , colorText resChannel
+        ,   " ", colorText nick
+        ,   "> "
+        ] ++ msg)
+

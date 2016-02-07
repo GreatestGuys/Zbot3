@@ -10,6 +10,7 @@ module Zbot.Extras.Color (
 ,   underline
 
 ,   colorize
+,   colorText
 )   where
 
 import Data.String (IsString, fromString)
@@ -59,6 +60,9 @@ colorize = T.concat . map go
             ,   text
             ,   "\x1b[0m"
             ]
+
+colorText :: T.Text -> ColorText
+colorText = ColorText []
 
 addStyle :: Style -> ColorText -> ColorText
 addStyle style (ColorText styles text) = ColorText (style : styles) text
