@@ -69,6 +69,7 @@ library
         ,   Zbot.Core.Bot.Mock
         ,   Zbot.Core.Irc
         ,   Zbot.Core.Service
+        ,   Zbot.Extras.Color
         ,   Zbot.Extras.Command
         ,   Zbot.Extras.Message
         ,   Zbot.Extras.Regex
