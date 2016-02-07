@@ -104,6 +104,7 @@ match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
     | optMatches <= 0                     = []
     | testMaybe optNick (/= evNick)       = skip
     | testMaybe optChannel (/= evChannel) = skip
+    | "!grep" `T.isPrefixOf` evMsg        = skip
     | not $ evMsg =~ optQuery             = skip
     | otherwise                           = isMatch
     where
