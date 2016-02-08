@@ -94,6 +94,7 @@ library
         ,   Zbot.Service.Replace
         ,   Zbot.Service.Reputation
         ,   Zbot.Service.Roll
+        ,   Zbot.Service.Scrollback
         ,   Zbot.Service.Seen
         ,   Zbot.Service.Summary
         ,   Zbot.Service.Uptime

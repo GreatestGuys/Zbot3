@@ -1,3 +1,4 @@
+{-# LANGUAGE NoOverloadedStrings #-}
 module Zbot.Service.Describe.Twitter (
     describeTwitter
 ) where

@@ -10,8 +10,8 @@ import Zbot.Service.Describe.Onion
 import Zbot.Service.Describe.Spotify
 import Zbot.Service.Describe.Twitter
 import Zbot.Service.Describe.YouTube
-import Zbot.Service.Grep
 import Zbot.Service.GitHub
+import Zbot.Service.Grep
 import Zbot.Service.Help
 import Zbot.Service.History
 import Zbot.Service.Lists
@@ -21,6 +21,7 @@ import Zbot.Service.Remind
 import Zbot.Service.Replace
 import Zbot.Service.Reputation
 import Zbot.Service.Roll
+import Zbot.Service.Scrollback
 import Zbot.Service.Seen
 import Zbot.Service.Summary
 import Zbot.Service.Uptime
@@ -47,6 +48,7 @@ main = zbotMain $ do
     registerService_ $ replace historyHandle
     registerService_ reputation
     registerService_ roll
+    registerService_ $ scrollback historyHandle
     registerService_ $ seen historyHandle
     registerService_ $ summary historyHandle
     uptime >>= registerService_

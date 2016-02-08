@@ -153,7 +153,7 @@ describe GrepOptions{..} GrepResult{..} =
     where
     format (time, nick, msg) = colorize ([
             fromString $ show time
-        ,   " " , colorText resChannel
+        ,   " ", colorText resChannel
         ,   " ", colorText nick
         ,   "> "
         ] ++ msg)
