@@ -1,4 +1,5 @@
 {-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Zbot.Extras.Command (
     Reply
 ,   onCommand

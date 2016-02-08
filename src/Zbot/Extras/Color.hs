@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Zbot.Extras.Color (
     Color (..)
 ,   ColorText

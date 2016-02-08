@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Zbot.Core.Irc.Engine (
     ChannelState (..)
 ,   EngineState (..)

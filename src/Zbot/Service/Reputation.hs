@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Zbot.Service.Reputation (
     Reputation
 ,   reputation

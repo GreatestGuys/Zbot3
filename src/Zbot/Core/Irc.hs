@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Zbot.Core.Irc (
     Irc
 ,   Event (..)
