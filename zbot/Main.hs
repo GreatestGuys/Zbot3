@@ -11,6 +11,7 @@ import Zbot.Service.Describe.Spotify
 import Zbot.Service.Describe.Twitter
 import Zbot.Service.Describe.YouTube
 import Zbot.Service.GitHub
+import Zbot.Service.Goblin
 import Zbot.Service.Grep
 import Zbot.Service.Help
 import Zbot.Service.History
@@ -39,6 +40,7 @@ main = zbotMain $ do
         ,   describeDefault
         ]
     registerService_ github
+    registerService_ goblin
     registerService_ $ grep historyHandle
     registerService_ help
     registerService_ lists

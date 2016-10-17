@@ -84,6 +84,7 @@ library
         ,   Zbot.Service.Describe.Twitter
         ,   Zbot.Service.Describe.YouTube
         ,   Zbot.Service.GitHub
+        ,   Zbot.Service.Goblin
         ,   Zbot.Service.Grep
         ,   Zbot.Service.Help
         ,   Zbot.Service.History
