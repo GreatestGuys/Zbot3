@@ -156,7 +156,6 @@ makeGoblin :: (MonadIO m, Bot m) => (T.Text -> m ()) -> Options -> m ()
 makeGoblin reply opts = do
     baseGoblin <- startingGoblin
     goblin <- loop (optLevel opts - 1) levelUp baseGoblin
-    reply $ T.pack $ show goblin
     mapM_ reply (prettyGoblin goblin)
 
 loop :: MonadIO m => Int -> (a -> m a) -> a -> m a
