@@ -37,7 +37,7 @@ info :: Scraper T.Text T.Text
 info = do
     script <- T.concat <$> texts (("body" :: String) // ("script" :: String))
     case decode $ extractJson script of
-        Nothing                                       -> empty
+        Nothing                                -> empty
         Just (YouTubeInfo title seconds views) -> return $ T.concat [
                 title
             ,   " ["
@@ -49,10 +49,10 @@ info = do
 extractJson :: T.Text -> LBS.ByteString
 extractJson script = LBS.fromStrict $ T.encodeUtf8 json
     where
-        jsonPrefix           = "yt.setConfig('PLAYER_CONFIG',"
+        jsonPrefix           = "yt.setConfig({'PLAYER_CONFIG': "
         (_, jsonWithGarbage) = T.breakOn jsonPrefix script
         jsonWithTrailing     = T.drop (T.length jsonPrefix) jsonWithGarbage
-        (json, _)            = T.breakOn ");" jsonWithTrailing
+        (json, _)            = T.breakOn ",'" jsonWithTrailing
 
 
 toTime :: Int -> T.Text
