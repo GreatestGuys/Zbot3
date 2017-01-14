@@ -73,8 +73,8 @@ handler reply msg
         modifyRep f nick = wrapModify (Map.alter f' nick)
             where f' = mfilter (/= 0) . return . f . fromMaybe 0
 
-        replyNickRep nick =   wrapGets (fromMaybe 0 . Map.lookup nick)
-                          >>= replyRep nick
+        replyNickRep nick = wrapGets (Map.lookup nick)
+                            >>= maybe (return ()) (replyRep nick)
 
         replyAllRep = do
             pairs <- wrapGets Map.assocs
