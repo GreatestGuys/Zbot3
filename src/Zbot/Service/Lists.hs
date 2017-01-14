@@ -31,7 +31,17 @@ lists = Service {
     ,   deserialize = deserializeLists
     ,   name        = "Zbot.Service.Lists"
     ,   process     = onCommand "!list" listsCommand
-    ,   helpSpec    = Nothing
+    ,   helpSpec    = Just HelpSpec {
+            helpAliases      = ["!list"]
+        ,   helpMessage      = [
+            "usage: !list show [list]"
+        ,   "       !list add [list] [element]"
+        ,   "       !list add at [index] [list] [element]"
+        ,   "       !list rm [list] [element]"
+        ,   "       !list check [list] [element]"
+        ,   "       !list flush [list]"
+        ]
+        }
     }
 
 serializeLists :: Lists -> Maybe BS.ByteString
@@ -52,17 +62,7 @@ listsCommand reply args = listsAction (T.words args)
         listsAction ("rm":list:xs)          = rmElem list xs
         listsAction ("check":list:e:xs)     = checkOffElem list (e:xs)
         listsAction ["flush", list]         = flushList list
-        listsAction _                       = help
-
-        -- The usage message, in case no arguments are passed.
-        help = mapM_ (lift . reply) [
-                  "!list show [list]"
-              ,   "!list add [list] [element]"
-              ,   "!list add at [index] [list] [element]"
-              ,   "!list rm [list] [element]"
-              ,   "!list check [list] [element]"
-              ,   "!list flush [list]"
-              ]
+        listsAction _                       = return ()
 
         -- Displays the list of lists.
         showLists = do
