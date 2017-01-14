@@ -1,6 +1,7 @@
 module Zbot.Extras.Message (
     Reply
 ,   onMessage
+,   onMessageWithChannel
 )   where
 
 import Zbot.Core.Bot
@@ -20,3 +21,11 @@ onMessage :: Bot m
 onMessage handler (Shout channel _ msg) = handler (shout channel) msg
 onMessage handler (Whisper nick msg)    = handler (whisper nick) msg
 onMessage _       _                     = return ()
+
+-- | A utility function for onMessage callers that want access to the their
+-- current channel.
+onMessageWithChannel :: Bot m
+                     => (Channel -> Reply m -> T.Text -> MonadService s m ())
+                     -> Event -> MonadService s m ()
+onMessageWithChannel handler e@(Shout channel _ _) = onMessage (handler channel) e
+onMessageWithChannel _       _                     = return ()
