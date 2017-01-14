@@ -17,9 +17,9 @@ import qualified Data.Text as T
 
 
 help :: Bot m => Service m ()
-help = (unitService "Zbot.Service.Help" (onCommand "!help" handler)) {
+help = (unitService "Zbot.Service.Help" (onCommands ["!help", "!halp"] handler)) {
         helpSpec = Just HelpSpec {
-                helpAliases      = ["!help"]
+                helpAliases      = ["!help", "!halp"]
             ,   helpMessage      = [
                     "usage: !help [command]"
                 ,   ""
