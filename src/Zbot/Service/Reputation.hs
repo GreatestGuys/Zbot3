@@ -28,13 +28,14 @@ reputation = Service {
     ,   serialize   = serializeReputation
     ,   deserialize = deserializeReputation
     ,   name        = "Zbot.Service.Reputation"
-    ,   process     = onMessage handler
+    ,   process     = onMessageWithChannel handler
     ,   helpSpec    = Just HelpSpec {
-            helpAliases      = ["!rep", "+1", "-1"]
+            helpAliases      = ["!rep", "+1", "-1", "!circlejerk"]
         ,   helpMessage      = [
             "usage: +1 [nick]"
         ,   "       -1 [nick]"
         ,   "       !rep [nick]"
+        ,   "       !circlejerk"
         ,   ""
         ,   "   The reputation service keeps track of the 'reputation' of"
         ,   "users in the channel. Reputation here being an arbitrary integer"
@@ -47,6 +48,8 @@ reputation = Service {
         ,   "Is given, then the reputation score of all known nicks will be"
         ,   "displayed. Otherwise, if a nick is given, then only the reputation"
         ,   "score for that user is displayed."
+        ,   ""
+        ,   "   !circlejerk can be used to +1 everyone in the channel."
         ]
         }
     }
@@ -57,18 +60,24 @@ serializeReputation (MkReputation m) = serializeShow m
 deserializeReputation :: BS.ByteString -> Maybe Reputation
 deserializeReputation = fmap MkReputation . deserializeRead
 
-handler :: Bot m => Reply m -> T.Text -> MonadService Reputation m ()
-handler reply msg
-    | ["+1", nick]   <- args = plus nick
-    | ["-1", nick]   <- args = minus nick
-    | ["!rep", nick] <- args = replyNickRep nick
-    | ["!rep"]       <- args = replyAllRep
-    | otherwise              = return ()
+handler :: Bot m => Channel -> Reply m -> T.Text -> MonadService Reputation m ()
+handler channel reply msg
+    | ["+1", nick]    <- args = plus nick
+    | ["-1", nick]    <- args = minus nick
+    | ["!rep", nick]  <- args = replyNickRep nick
+    | ["!rep"]        <- args = replyAllRep
+    | ["!circlejerk"] <- args = circleJerk
+    | otherwise               = return ()
     where
         args = T.words msg
 
         plus  = modifyRep (+ 1)
         minus = modifyRep (subtract 1)
+        circleJerk = lift (do
+            n <- myNick
+            allNicks <- filter (/= n) <$> nicks channel
+            shout channel "Everyone gets a rep!"
+            return allNicks) >>= (mapM_ (modifyRep (+ 1)))
 
         modifyRep f nick = wrapModify (Map.alter f' nick)
             where f' = mfilter (/= 0) . return . f . fromMaybe 0
