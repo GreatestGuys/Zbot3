@@ -90,7 +90,7 @@ closeIssue reply number accessToken = do
         where
             options = defaults & param "access_token" .~ [accessToken]
 
-            payload = object ["state" .= number]
+            payload = object ["state" .= ("closed" :: T.Text)]
 
             issueEndpoint =  "https://api.github.com/repos/GreatestGuys/Zbot3/issues/"
                           ++ T.unpack number
