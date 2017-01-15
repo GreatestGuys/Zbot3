@@ -89,6 +89,7 @@ library
         ,   Zbot.Service.Help
         ,   Zbot.Service.History
         ,   Zbot.Service.Lists
+        ,   Zbot.Service.Morse
         ,   Zbot.Service.NGram
         ,   Zbot.Service.Op
         ,   Zbot.Service.Remind

@@ -16,6 +16,7 @@ import Zbot.Service.Grep
 import Zbot.Service.Help
 import Zbot.Service.History
 import Zbot.Service.Lists
+import Zbot.Service.Morse
 import Zbot.Service.NGram
 import Zbot.Service.Op
 import Zbot.Service.Remind
@@ -44,6 +45,7 @@ main = zbotMain $ do
     registerService_ $ grep historyHandle
     registerService_ help
     registerService_ lists
+    registerService_ morse
     ngram historyHandle >>= registerService_
     registerService_ op
     registerService_ remind
