@@ -20,8 +20,8 @@ import qualified Data.Text as T
 replace :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 replace history = unitService "Zbot.Service.Replace" handler
     where
-        handler (Shout channel nick msg) = lift $ do
-            maybeLine <- findLastMessage channel nick
+        handler (Shout channel _ msg) = lift $ do
+            maybeLine <- findLastMessage channel
             handleMessage (shout channel) maybeLine msg
         handler _                        = return ()
 
@@ -34,11 +34,10 @@ replace history = unitService "Zbot.Service.Replace" handler
                     else reply rline
         handleMessage _ _ _                    = return ()
 
-        findLastMessage channel nick = foldHistoryBackward history match Nothing
+        findLastMessage channel = foldHistoryBackward history match Nothing
             where
-                match _ (Shout channel' nick' msg) Nothing
+                match _ (Shout channel' _ msg) Nothing
                     | channel == channel'
-                      && nick == nick'
                       && not ("s/" `T.isPrefixOf` msg) = Just msg
                 match _ _ acc = acc
 
