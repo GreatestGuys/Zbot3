@@ -11,6 +11,7 @@ IRC server using the `runMockBot` utility.
 
 ```
 $ stack ghci
+ghci> :set -XOverloadedStrings
 ghci> :m + Zbot.Core.Irc.Types Zbot.Core.Bot.Mock
 ghci> let services = registerService_ reputation
 ghci> let events = [Shout "#channel" "nick" "!rep"]
