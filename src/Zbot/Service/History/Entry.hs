@@ -6,7 +6,6 @@ module Zbot.Service.History.Entry (
 
 import Zbot.Core.Irc
 
-import Control.Applicative ((<$>), (<*>))
 import Control.Monad (mzero)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Word (Word8, Word16, Word64)

@@ -9,7 +9,6 @@ import Zbot.Extras.Command
 import Zbot.Extras.Scrape
 import Zbot.Extras.UnitService
 
-import Control.Applicative
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)

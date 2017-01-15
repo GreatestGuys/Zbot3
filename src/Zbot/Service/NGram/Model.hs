@@ -10,12 +10,11 @@ module Zbot.Service.NGram.Model (
 ,   generate
 ) where
 
-import Control.Applicative ((<$>), (<*>))
 import Control.Arrow (second)
 import Data.Foldable (toList)
 import Data.Int (Int64)
 import Data.List (intercalate, tails)
-import Data.Monoid (Monoid (..), (<>))
+import Data.Monoid ((<>))
 import Data.Proxy (Proxy (..))
 import Data.Random (RVar, uniform)
 import GHC.TypeLits (KnownNat, Nat, natVal, type (<=))

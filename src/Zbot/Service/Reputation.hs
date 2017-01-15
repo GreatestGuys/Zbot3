@@ -10,7 +10,6 @@ import Zbot.Core.Service
 import Zbot.Extras.Message
 import Zbot.Extras.Serialize
 
-import Control.Monad (mfilter)
 import Control.Monad.State
 import Data.List (sortBy)
 import Data.Maybe (fromMaybe)

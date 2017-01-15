@@ -12,7 +12,6 @@ module Zbot.Core.Service.IO (
 import Zbot.Core.Irc
 import Zbot.Core.Service.Types
 
-import Control.Applicative
 import Control.Monad.State
 import Data.Char (isAlphaNum)
 import Data.IORef

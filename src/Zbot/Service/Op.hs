@@ -8,7 +8,6 @@ import Zbot.Core.Irc
 import Zbot.Core.Service
 import Zbot.Extras.UnitService
 
-import Control.Applicative ((<$>))
 import Control.Monad.Trans.Class (lift)
 
 import qualified Data.Text as T

@@ -10,7 +10,6 @@ import Zbot.Core.Service
 import Zbot.Extras.Command
 
 import Control.Monad.State
-import Control.Applicative ((<$>))
 import Data.Char (isNumber)
 import Safe (readMay)
 

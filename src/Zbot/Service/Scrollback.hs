@@ -42,7 +42,6 @@ help = HelpSpec {
     ]
 }
 
--- | A service that will grant ops to users on the current channel.
 scrollback :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 scrollback historyHandle =
     (unitService "Zbot.Service.Scrollback" (handler historyHandle))

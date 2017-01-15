@@ -7,7 +7,6 @@ module Zbot.Service.History.Log (
 import Zbot.Core.Irc
 import Zbot.Service.History.Entry
 
-import Control.Applicative ((<$>))
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Time.Clock (UTCTime)
 import Data.Word (Word16)

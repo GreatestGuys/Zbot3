@@ -7,8 +7,6 @@ module Zbot.Core.Irc.Protocol (
 ,   Render (..)
 ) where
 
-import Control.Applicative
-
 import qualified Data.Attoparsec.Text as Atto
 import qualified Data.Text as T
 

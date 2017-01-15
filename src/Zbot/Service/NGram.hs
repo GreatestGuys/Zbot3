@@ -12,11 +12,9 @@ import Zbot.Extras.Command
 import Zbot.Service.History
 import Zbot.Service.NGram.Model
 
-import Control.Applicative ((<$>))
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
 import Data.Maybe (mapMaybe)
-import Data.Monoid (mconcat)
 import Data.Random.Sample (sample)
 import Data.Time.Clock (UTCTime)
 
