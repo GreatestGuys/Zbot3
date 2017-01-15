@@ -8,7 +8,6 @@ import Zbot.Core.Service
 import Zbot.Extras.UnitService
 import Zbot.Extras.Command
 
-import Control.Applicative ((<$>))
 import Control.Monad.Trans.Class (lift)
 import Data.Maybe (mapMaybe, listToMaybe)
 import GHC.Exts (sortWith)

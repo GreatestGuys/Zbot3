@@ -15,7 +15,6 @@ import Zbot.Extras.UnitService
 import Zbot.Service.History
 import Zbot.Service.NGram.Model
 
-import Control.Applicative ((<$>))
 import Control.Monad (guard)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
@@ -30,7 +29,6 @@ import qualified Data.Text as T
 
 type NGramModel = Model 3 T.Text
 
--- | A service that will grant ops to users on the current channel.
 summary :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 summary history = (unitService "Zbot.Service.Summary" handler) {
         helpSpec = Just HelpSpec {

@@ -15,7 +15,6 @@ module Zbot.Core.Irc.Engine (
 import Zbot.Core.Irc.Protocol
 import Zbot.Core.Irc.Types
 
-import Control.Applicative
 import Control.Monad.State
 import Control.Monad.Writer
 import Data.Maybe (maybeToList)

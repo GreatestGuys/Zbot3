@@ -12,7 +12,6 @@ import Zbot.Extras.Command
 import Zbot.Extras.UnitService
 import Zbot.Service.History
 
-import Control.Applicative
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Trans.Class (lift)
 import Data.List (intercalate)
@@ -25,7 +24,6 @@ import Text.Regex.TDFA.Text ()
 import qualified Data.Text as T
 
 
--- | A service that will grant ops to users on the current channel.
 grep :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 grep historyHandle =
     (unitService "Zbot.Service.Grep" (onCommand "!grep" grepCommand)) {

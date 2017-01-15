@@ -14,7 +14,6 @@ module Zbot.Core.Service.Types (
 
 import Zbot.Core.Irc
 
-import Control.Applicative
 import Control.Monad.State
 
 import qualified Control.Monad.Catch as Catch

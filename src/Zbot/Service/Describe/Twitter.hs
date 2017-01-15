@@ -6,7 +6,6 @@ module Zbot.Service.Describe.Twitter (
 import Zbot.Extras.Scrape
 import Zbot.Service.Describe
 
-import Control.Applicative ((<$>))
 import Text.HTML.Scalpel
 
 import qualified Data.Text as T
