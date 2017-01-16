@@ -83,6 +83,10 @@ instance Binary.Binary Event where
         putText from
         putText to
     put Initialize = putWord8 5
+    put (Invite nick channel) = do
+        putWord8 6
+        putText nick
+        putText channel
 
 getWord8 :: Binary.Get Word8
 getWord8 = Binary.get
