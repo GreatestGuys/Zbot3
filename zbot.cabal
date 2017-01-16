@@ -88,6 +88,7 @@ library
         ,   Zbot.Service.Grep
         ,   Zbot.Service.Help
         ,   Zbot.Service.History
+        ,   Zbot.Service.Invite
         ,   Zbot.Service.Lists
         ,   Zbot.Service.Morse
         ,   Zbot.Service.NGram
