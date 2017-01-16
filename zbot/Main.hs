@@ -10,6 +10,7 @@ import Zbot.Service.Describe.Onion
 import Zbot.Service.Describe.Spotify
 import Zbot.Service.Describe.Twitter
 import Zbot.Service.Describe.YouTube
+import Zbot.Service.Dude
 import Zbot.Service.GitHub
 import Zbot.Service.Goblin
 import Zbot.Service.Grep
@@ -40,6 +41,7 @@ main = zbotMain $ do
         ,   describeYouTube
         ,   describeDefault
         ]
+    registerService_ dude
     registerService_ github
     registerService_ goblin
     registerService_ $ grep historyHandle
