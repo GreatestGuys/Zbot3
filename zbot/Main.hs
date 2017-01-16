@@ -55,4 +55,4 @@ main = zbotMain $ do
     registerService_ $ scrollback historyHandle
     registerService_ $ seen historyHandle
     registerService_ $ summary historyHandle
-    uptime >>= registerService_
+    uptime historyHandle >>= registerService_

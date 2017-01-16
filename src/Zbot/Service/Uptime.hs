@@ -4,10 +4,12 @@ module Zbot.Service.Uptime (
 )   where
 
 import Zbot.Core.Bot
+import Zbot.Core.Irc
 import Zbot.Core.Service
-import Zbot.Extras.Command
+import Zbot.Extras.Message
 import Zbot.Extras.Time
 import Zbot.Extras.UnitService
+import Zbot.Service.History
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
@@ -17,16 +19,43 @@ import qualified Data.Text as T
 
 
 -- | A service that reports the bot's uptime.
-uptime :: (MonadIO io, MonadIO m, Bot m) => io (Service m ())
-uptime = do
+uptime :: (MonadIO m, Bot m) => Handle m History -> m (Service m ())
+uptime history = do
     bootTime <- liftIO getCurrentTime
     return $ unitService
         "Zbot.Service.Uptime"
-        (onCommand "!uptime" (handler bootTime))
+        (onMessage $ uptimeHandler history bootTime)
 
-handler :: (MonadIO m, Bot m)
-        => UTCTime -> Reply m -> T.Text -> MonadService () m ()
-handler bootTime reply _ = do
-    now <- liftIO getCurrentTime
-    let up = diffUTCTime now bootTime
-    lift $ reply $ prettyDiffTime up
+uptimeHandler :: (MonadIO m, Bot m)
+              => Handle m History
+              -> UTCTime -> Reply m -> T.Text -> MonadService () m ()
+uptimeHandler history bootTime reply msg
+    | ["!uptime"]       <- args = botUptime
+    | ["!uptime", nick] <- args = nickUptime nick
+    | otherwise      = return ()
+    where
+        args = T.words msg
+
+        botUptime = do
+            now <- liftIO getCurrentTime
+            let up = diffUTCTime now bootTime
+            lift $ reply $ prettyDiffTime up
+
+        nickUptime nick = lift $ do
+            lastTime <- findJoinTime nick
+            now      <- liftIO getCurrentTime
+            reply $ maybe notFound (found now) lastTime
+            where
+                notFound = T.concat ["There are no records of ", nick, "."]
+
+                found now time = T.concat [
+                        nick
+                    ,   " joined "
+                    ,   prettyDiffTime (diffUTCTime now time)
+                    ,   " ago."
+                    ]
+
+        findJoinTime nick = foldHistoryBackward history match Nothing
+            where
+                match time (Join _ nick') Nothing | nick' == nick = Just time
+                match _    _              acc                     = acc
