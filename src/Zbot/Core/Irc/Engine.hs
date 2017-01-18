@@ -105,7 +105,6 @@ pingPongHandler _                           = return ()
 inviteHandler :: Irc irc => Message -> WriterT [Event] irc ()
 inviteHandler Message {
               command    = "INVITE"
-          ,   prefix     = Nothing
           ,   parameters = [invitee, channel]
           } = tell [Invite invitee channel]
 inviteHandler _ = return ()
