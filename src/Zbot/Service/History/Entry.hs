@@ -122,7 +122,7 @@ getEventType = do
         (Just c) -> return $ Just $ fromConstr c
     where
         eventTypeMapping = M.fromList
-                         . map (\x -> (constrIndex x, x))
+                         . map (\x -> (pred $ constrIndex x, x))
                          . dataTypeConstrs
                          $ dataTypeOf eventType
 
@@ -139,14 +139,11 @@ getText = do
     either (const mzero) return possiblyText
 
 putEventType :: EventType -> Binary.Put
-putEventType e = putWord8 $ case e of
-    Zero  -> 0
-    One   -> 1
-    Two   -> 2
-    Three -> 3
-    Four  -> 4
-    Five  -> 5
-    Six   -> 6
+putEventType e = putWord8
+               . fromIntegral
+               . pred
+               . constrIndex
+               $ toConstr e
 
 putText :: T.Text -> Binary.Put
 putText = Binary.put . T.encodeUtf8
