@@ -83,6 +83,7 @@ library
         ,   Zbot.Service.Describe.Spotify
         ,   Zbot.Service.Describe.Twitter
         ,   Zbot.Service.Describe.YouTube
+        ,   Zbot.Service.Dude
         ,   Zbot.Service.GitHub
         ,   Zbot.Service.Goblin
         ,   Zbot.Service.Grep
