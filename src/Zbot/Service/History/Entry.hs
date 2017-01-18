@@ -1,4 +1,6 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE RankNTypes #-}
+
 module Zbot.Service.History.Entry (
     Entry (..)
 ,   mkEntry
@@ -8,12 +10,14 @@ import Zbot.Core.Irc
 
 import Control.Monad (mzero)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.Word (Word8, Word16, Word64)
+import Data.Data
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds, posixSecondsToUTCTime)
+import Data.Word (Word8, Word16, Word64)
 
 import qualified Data.Binary as Binary
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
@@ -49,40 +53,48 @@ instance Binary.Binary UTCTime where
     get = (posixSecondsToUTCTime . fromIntegral) <$> getWord64
     put = putWord64 . round . utcTimeToPOSIXSeconds
 
+-- | Unique labels for our event types
+data EventType = Zero | One | Two | Three | Four | Five | Six deriving (Data)
+
 instance Binary.Binary Event where
     get = do
-        eventType <- getWord8
+        eventType <- getEventType
         case eventType of
-            0 -> Shout <$> getText <*> getText <*> getText
-            1 -> Whisper <$> getText <*> getText
-            2 -> Join <$> getText <*> getText
-            3 -> Part <$> getText <*> getText
-            4 -> NickChange <$> getText <*> getText
-            5 -> return Initialize
-            _ -> mzero
+            Just Zero  -> Shout <$> getText <*> getText <*> getText
+            Just One   -> Whisper <$> getText <*> getText
+            Just Two   -> Join <$> getText <*> getText
+            Just Three -> Part <$> getText <*> getText
+            Just Four  -> NickChange <$> getText <*> getText
+            Just Five  -> return Initialize
+            Just Six   -> Invite <$> getText <*> getText
+            Nothing    -> mzero
 
     put (Shout channel nick message) = do
-        putWord8 0
+        putEventType Zero
         putText channel
         putText nick
         putText message
     put (Whisper nick message) = do
-        putWord8 1
+        putEventType One
         putText nick
         putText message
     put (Join channel nick) = do
-        putWord8 2
+        putEventType Two
         putText channel
         putText nick
     put (Part channel nick) = do
-        putWord8 3
+        putEventType Three
         putText channel
         putText nick
     put (NickChange from to) = do
-        putWord8 4
+        putEventType Four
         putText from
         putText to
-    put Initialize = putWord8 5
+    put Initialize = putEventType Five
+    put (Invite nick channel) = do
+        putEventType Six
+        putText nick
+        putText channel
 
 getWord8 :: Binary.Get Word8
 getWord8 = Binary.get
@@ -102,10 +114,36 @@ getWord64 = Binary.get
 putWord64 :: Word64 -> Binary.Put
 putWord64 = Binary.put
 
+getEventType :: Binary.Get (Maybe EventType)
+getEventType = do
+    eventType <- fmap toInt getWord8
+    case M.lookup eventType eventTypeMapping of
+        Nothing  -> return Nothing
+        (Just c) -> return $ Just $ fromConstr c
+    where
+        eventTypeMapping = M.fromList
+                         . map (\x -> (pred $ constrIndex x, x))
+                         . dataTypeConstrs
+                         $ dataTypeOf eventType
+
+        eventType :: EventType
+        eventType = undefined
+
+
+        toInt :: Word8 -> Int
+        toInt = fromIntegral
+
 getText :: Binary.Get T.Text
 getText = do
     possiblyText <- (T.decodeUtf8' . LBS.toStrict) <$> Binary.get
     either (const mzero) return possiblyText
+
+putEventType :: EventType -> Binary.Put
+putEventType e = putWord8
+               . fromIntegral
+               . pred
+               . constrIndex
+               $ toConstr e
 
 putText :: T.Text -> Binary.Put
 putText = Binary.put . T.encodeUtf8

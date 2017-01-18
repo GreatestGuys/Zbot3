@@ -36,6 +36,7 @@ data ModeDiff a = AddMode a | RmMode a
 data Event
     = Shout Channel Nick T.Text  -- ^ A nick messaging a channel.
     | Whisper Nick T.Text  -- ^ A nick messaging this bot.
+    | Invite Nick Channel -- ^ A channel invite.
     | Join Channel Nick
     | Part Channel Nick
     | NickChange Nick Nick  -- ^ A change from the first nick to the second.

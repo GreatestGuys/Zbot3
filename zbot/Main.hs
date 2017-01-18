@@ -16,6 +16,7 @@ import Zbot.Service.Goblin
 import Zbot.Service.Grep
 import Zbot.Service.Help
 import Zbot.Service.History
+import Zbot.Service.Invite
 import Zbot.Service.Lists
 import Zbot.Service.Morse
 import Zbot.Service.NGram
@@ -33,6 +34,7 @@ import Zbot.Service.Uptime
 main = zbotMain $ do
     historyHandle <- history >>= registerService
 
+    registerService_ acceptInvite
     registerService_ define
     registerService_ $ describe [
             describeOnion

@@ -85,7 +85,8 @@ stepEngine message = execWriterT $ mapM_ ($ message) handlers
 -- state.
 handlers :: Irc irc => [Message -> WriterT [Event] irc ()]
 handlers = [
-        joinHandler
+        inviteHandler
+    ,   joinHandler
     ,   nickHandler
     ,   partHandler
     ,   pingPongHandler
@@ -94,12 +95,19 @@ handlers = [
     ,   stalkerHandler
     ]
 
--- | A handler that handles incoming PING commands and responds with a PONG
+-- | A handler that handles incoming PING messages and responds with a PONG
 -- message.
 pingPongHandler :: Irc irc => Message -> WriterT [Event] irc ()
 pingPongHandler msg@Message{command="PING"} =
     lift $ sendMessage RealTime msg {command = "PONG"}
 pingPongHandler _                           = return ()
+
+inviteHandler :: Irc irc => Message -> WriterT [Event] irc ()
+inviteHandler Message {
+              command    = "INVITE"
+          ,   parameters = [invitee, channel]
+          } = tell [Invite invitee channel]
+inviteHandler _ = return ()
 
 nickHandler :: Irc irc => Message -> WriterT [Event] irc ()
 nickHandler Message {
