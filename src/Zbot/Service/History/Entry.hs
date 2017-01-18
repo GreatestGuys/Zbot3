@@ -59,6 +59,7 @@ instance Binary.Binary Event where
             3 -> Part <$> getText <*> getText
             4 -> NickChange <$> getText <*> getText
             5 -> return Initialize
+            6 -> Invite <$> getText <*> getText
             _ -> mzero
 
     put (Shout channel nick message) = do
