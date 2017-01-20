@@ -8,7 +8,7 @@ import Zbot.Core.Bot
 import Zbot.Core.Irc
 import Zbot.Core.Service
 import Zbot.Extras.Color
-import Zbot.Extras.Command
+import Zbot.Extras.Message
 import Zbot.Extras.UnitService
 import Zbot.Service.History
 
@@ -26,7 +26,7 @@ import qualified Data.Text as T
 
 grep :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 grep historyHandle =
-    (unitService "Zbot.Service.Grep" (onCommand "!grep" grepCommand)) {
+    (unitService "Zbot.Service.Grep" $ onMessageWithChannel handler) {
         helpSpec = Just HelpSpec {
                 helpAliases = ["!grep"]
             ,   helpMessage = [T.intercalate " " [
@@ -40,11 +40,18 @@ grep historyHandle =
             }
     }
     where
-        grepCommand reply args = lift $ do
+        handler channel reply msg
+            | ("!grep":rest) <- args = grepCommand channel reply
+                                     $ T.intercalate " " rest
+            | otherwise              = return ()
+            where
+                args = T.words msg
+
+        grepCommand channel reply args = lift $ do
             let opts = parse args defaultOptions
             history <-  drop 1
                     <$> foldHistoryForward historyHandle historyToList []
-            let matches = match opts [] history
+            let matches = match channel opts [] history
             mapM_ reply $ reverse
                         $ intercalate [colorize [fg Cyan "----"]]
                         $ map (describe opts) matches
@@ -94,12 +101,13 @@ historyToList :: UTCTime -> Event -> [(UTCTime, Event)] -> [(UTCTime, Event)]
 historyToList time ev@Shout{} acc = (time, ev) : acc
 historyToList _    _          acc = acc
 
-match :: GrepOptions
+match :: Channel
+      -> GrepOptions
       -> [(UTCTime, Event)]
       -> [(UTCTime, Event)]
       -> [GrepResult]
-match _ _ [] = []
-match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
+match _ _ _ [] = []
+match channel opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
     | optMatches <= 0                     = []
     | testMaybe optNick (/= evNick)       = skip
     | testMaybe optChannel (/= evChannel) = skip
@@ -107,11 +115,11 @@ match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
     | not $ evMsg =~ optQuery             = skip
     | otherwise                           = isMatch
     where
-        testMaybe = flip $ maybe False
+        testMaybe = flip $ maybe (channel /= evChannel)
 
-        skip = match opts nextPrefix evs
+        skip = match channel opts nextPrefix evs
 
-        isMatch = result : match nextOpts nextPrefix evs
+        isMatch = result : match channel nextOpts nextPrefix evs
 
         nextPrefix = ev : prefix
 
@@ -141,7 +149,7 @@ match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
 
         format (t, Shout _ n m) = (t, n, m)
         format _                = error "Impossible non-shout"
-match opts prefix (_:evs) = match opts prefix evs
+match channel opts prefix (_:evs) = match channel opts prefix evs
 
 describe :: GrepOptions -> GrepResult -> [T.Text]
 describe GrepOptions{..} GrepResult{..} =
