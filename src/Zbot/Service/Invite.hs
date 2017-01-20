@@ -15,9 +15,10 @@ acceptInvite :: Bot m => Service m ()
 acceptInvite = unitService "Zbot.Service.Invite" handler
 
 handler :: Bot m => Event -> MonadService () m ()
-handler (Invite invitee channel) = lift $ do
+handler (Invite invitee channel)  = lift $ do
     nick <- myNick
     if (nick == invitee)
         then joinChannel channel
         else return ()
-handler _                        = return ()
+handler (Shout channel _ "!gtfo") = lift $ partChannel channel
+handler _                         = return ()
