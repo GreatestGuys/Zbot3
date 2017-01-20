@@ -57,7 +57,8 @@ handler :: (Catch.MonadCatch m, MonadIO m, Bot m)
         -> T.Text
         -> MonadService GitHub m ()
 handler reply msg
-        | ("!report":issue)    <- args = githubHandler reportIssue reply $ T.concat issue
+        | ("!report":issue)    <- args = githubHandler reportIssue reply
+                                       $ T.intercalate " " issue
         | ("!close":number:[]) <- args = githubHandler closeIssue reply number
         | otherwise                    = return ()
         where
