@@ -48,10 +48,10 @@ grep historyHandle =
                 args = T.words msg
 
         grepCommand channel reply args = lift $ do
-            let opts = parse args defaultOptions
+            let opts = parse args $ defaultOptions channel
             history <-  drop 1
                     <$> foldHistoryForward historyHandle historyToList []
-            let matches = match channel opts [] history
+            let matches = match opts [] history
             mapM_ reply $ reverse
                         $ intercalate [colorize [fg Cyan "----"]]
                         $ map (describe opts) matches
@@ -60,7 +60,7 @@ data GrepOptions = GrepOptions {
         optContext :: Int
     ,   optMatches :: Int
     ,   optNick    :: Maybe Nick
-    ,   optChannel :: Maybe Channel
+    ,   optChannel :: Channel
     ,   optQuery   :: T.Text
     }
 
@@ -73,12 +73,12 @@ data GrepResult = GrepResult {
     ,   resSuffix  :: [(UTCTime, Nick, [ColorText])]
     }
 
-defaultOptions :: GrepOptions
-defaultOptions = GrepOptions {
+defaultOptions :: Channel -> GrepOptions
+defaultOptions c = GrepOptions {
         optContext = 0
     ,   optMatches = 1
     ,   optNick    = Nothing
-    ,   optChannel = Nothing
+    ,   optChannel = c
     ,   optQuery   = "."
     }
 
@@ -86,7 +86,7 @@ parse :: T.Text -> GrepOptions -> GrepOptions
 parse args opts
     | ("-m", Just m) <- (flag, intValue)  = parse rest $ opts {optMatches = m}
     | ("-c", Just c) <- (flag, intValue)  = parse rest $ opts {optContext = c}
-    | ("-C", c)      <- (flag, justValue) = parse rest $ opts {optChannel = c}
+    | ("-C", c)      <- (flag, value    ) = parse rest $ opts {optChannel = c}
     | ("-n", n)      <- (flag, justValue) = parse rest $ opts {optNick = n}
     | T.null args                         = opts {optQuery = "."}
     | otherwise                           = opts {optQuery = args}
@@ -101,25 +101,24 @@ historyToList :: UTCTime -> Event -> [(UTCTime, Event)] -> [(UTCTime, Event)]
 historyToList time ev@Shout{} acc = (time, ev) : acc
 historyToList _    _          acc = acc
 
-match :: Channel
-      -> GrepOptions
+match :: GrepOptions
       -> [(UTCTime, Event)]
       -> [(UTCTime, Event)]
       -> [GrepResult]
-match _ _ _ [] = []
-match channel opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
+match _ _ [] = []
+match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
     | optMatches <= 0                     = []
     | testMaybe optNick (/= evNick)       = skip
-    | testMaybe optChannel (/= evChannel) = skip
+    | optChannel /= evChannel             = skip
     | "!grep" `T.isPrefixOf` evMsg        = skip
     | not $ evMsg =~ optQuery             = skip
     | otherwise                           = isMatch
     where
-        testMaybe = flip $ maybe (channel /= evChannel)
+        testMaybe = flip $ maybe False
 
-        skip = match channel opts nextPrefix evs
+        skip = match opts nextPrefix evs
 
-        isMatch = result : match channel nextOpts nextPrefix evs
+        isMatch = result : match nextOpts nextPrefix evs
 
         nextPrefix = ev : prefix
 
@@ -149,7 +148,7 @@ match channel opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMs
 
         format (t, Shout _ n m) = (t, n, m)
         format _                = error "Impossible non-shout"
-match channel opts prefix (_:evs) = match channel opts prefix evs
+match opts prefix (_:evs) = match opts prefix evs
 
 describe :: GrepOptions -> GrepResult -> [T.Text]
 describe GrepOptions{..} GrepResult{..} =
