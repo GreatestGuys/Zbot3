@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Zbot.Core.Irc.Engine (
     ChannelState (..)
 ,   EngineState (..)
@@ -18,6 +19,7 @@ import Zbot.Core.Irc.Types
 import Control.Monad.State
 import Control.Monad.Writer
 import Data.Maybe (maybeToList)
+import Development.GitRev (gitHash)
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
@@ -36,6 +38,7 @@ data EngineState = EngineState {
 ,   engineStateChannelsTemp :: Map.Map Channel ChannelState
 ,   engineStateNick         :: Nick
 ,   engineStateUser         :: User
+,   engineStateHash         :: T.Text
 } deriving (Eq, Ord, Read, Show)
 
 -- | A Monad that is capable of running an IRC engine.
@@ -57,7 +60,7 @@ emptyChannelState = ChannelState [] []
 startEngine :: Irc irc => Nick -> User -> irc ()
 startEngine nick user = put state >> mapM_ (sendMessage RealTime) outgoing
     where
-        state       = EngineState Map.empty Map.empty nick user
+        state       = EngineState Map.empty Map.empty nick user $(gitHash)
         outgoing    = [nickMessage, userMessage]
         nickMessage = Message {
                 prefix     = Nothing

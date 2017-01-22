@@ -43,6 +43,7 @@ library
         ,   directory
         ,   exceptions
         ,   filepath
+        ,   gitrev
         ,   lens
         ,   lens-aeson
         ,   mmap
@@ -102,6 +103,7 @@ library
         ,   Zbot.Service.Seen
         ,   Zbot.Service.Summary
         ,   Zbot.Service.Uptime
+        ,   Zbot.Service.Version
 
     other-modules:
             Zbot.Core.Bot.Networked
