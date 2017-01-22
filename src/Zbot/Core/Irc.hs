@@ -11,7 +11,6 @@ module Zbot.Core.Irc (
 ,   ChannelMode (..)
 
 ,   myNick
-,   myVersion
 ,   nicks
 ,   channels
 ,   whisper
@@ -37,10 +36,6 @@ import qualified Data.Text as T
 -- | The current nick of the bot.
 myNick :: Irc irc => irc Nick
 myNick = gets engineStateNick
-
--- | The current bot's current version info.
-myVersion :: Irc irc => irc T.Text
-myVersion = gets engineStateVersion
 
 -- | A list of all nicks in a given channel.
 nicks :: Irc irc => Channel -> irc [Nick]
