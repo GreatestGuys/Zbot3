@@ -48,9 +48,10 @@ handler _                        =  return ()
 
 handleCmd :: Bot m => Channel -> Nick -> T.Text -> MonadService Remind m ()
 handleCmd channel nick msg
-    | "!remind":other:xs <- T.words msg = modify (addReminder other xs)
-    | otherwise                         = return ()
-    where addReminder other xs = MkRemind
+    | "!remind":others:xs <- T.words msg = mapM_ (modify . addReminder xs)
+                                         $ T.splitOn "," others
+    | otherwise                          = return ()
+    where addReminder xs other = MkRemind
                                . ((other, channel, nick, T.unwords xs) :)
                                . unMkRemind
 
