@@ -8,7 +8,7 @@ import Zbot.Core.Bot
 import Zbot.Core.Irc
 import Zbot.Core.Service
 import Zbot.Extras.Color
-import Zbot.Extras.Command
+import Zbot.Extras.Message
 import Zbot.Extras.UnitService
 import Zbot.Service.History
 
@@ -26,7 +26,7 @@ import qualified Data.Text as T
 
 grep :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 grep historyHandle =
-    (unitService "Zbot.Service.Grep" (onCommand "!grep" grepCommand)) {
+    (unitService "Zbot.Service.Grep" $ onMessageWithChannel handler) {
         helpSpec = Just HelpSpec {
                 helpAliases = ["!grep"]
             ,   helpMessage = [T.intercalate " " [
@@ -40,8 +40,15 @@ grep historyHandle =
             }
     }
     where
-        grepCommand reply args = lift $ do
-            let opts = parse args defaultOptions
+        handler channel reply msg
+            | ("!grep":rest) <- args = grepCommand channel reply
+                                     $ T.intercalate " " rest
+            | otherwise              = return ()
+            where
+                args = T.words msg
+
+        grepCommand channel reply args = lift $ do
+            let opts = parse args $ defaultOptions channel
             history <-  drop 1
                     <$> foldHistoryForward historyHandle historyToList []
             let matches = match opts [] history
@@ -53,7 +60,7 @@ data GrepOptions = GrepOptions {
         optContext :: Int
     ,   optMatches :: Int
     ,   optNick    :: Maybe Nick
-    ,   optChannel :: Maybe Channel
+    ,   optChannel :: Channel
     ,   optQuery   :: T.Text
     }
 
@@ -66,12 +73,12 @@ data GrepResult = GrepResult {
     ,   resSuffix  :: [(UTCTime, Nick, [ColorText])]
     }
 
-defaultOptions :: GrepOptions
-defaultOptions = GrepOptions {
+defaultOptions :: Channel -> GrepOptions
+defaultOptions c = GrepOptions {
         optContext = 0
     ,   optMatches = 1
     ,   optNick    = Nothing
-    ,   optChannel = Nothing
+    ,   optChannel = c
     ,   optQuery   = "."
     }
 
@@ -79,7 +86,7 @@ parse :: T.Text -> GrepOptions -> GrepOptions
 parse args opts
     | ("-m", Just m) <- (flag, intValue)  = parse rest $ opts {optMatches = m}
     | ("-c", Just c) <- (flag, intValue)  = parse rest $ opts {optContext = c}
-    | ("-C", c)      <- (flag, justValue) = parse rest $ opts {optChannel = c}
+    | ("-C", c)      <- (flag, value    ) = parse rest $ opts {optChannel = c}
     | ("-n", n)      <- (flag, justValue) = parse rest $ opts {optNick = n}
     | T.null args                         = opts {optQuery = "."}
     | otherwise                           = opts {optQuery = args}
@@ -102,7 +109,7 @@ match _ _ [] = []
 match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
     | optMatches <= 0                     = []
     | testMaybe optNick (/= evNick)       = skip
-    | testMaybe optChannel (/= evChannel) = skip
+    | optChannel /= evChannel             = skip
     | "!grep" `T.isPrefixOf` evMsg        = skip
     | not $ evMsg =~ optQuery             = skip
     | otherwise                           = isMatch
