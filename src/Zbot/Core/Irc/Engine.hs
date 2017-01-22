@@ -19,7 +19,7 @@ import Zbot.Core.Irc.Types
 import Control.Monad.State
 import Control.Monad.Writer
 import Data.Maybe (maybeToList)
-import Development.GitRev (gitHash)
+import Development.GitRev (gitCommitDate, gitHash)
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
@@ -38,7 +38,7 @@ data EngineState = EngineState {
 ,   engineStateChannelsTemp :: Map.Map Channel ChannelState
 ,   engineStateNick         :: Nick
 ,   engineStateUser         :: User
-,   engineStateHash         :: T.Text
+,   engineStateVersion      :: T.Text
 } deriving (Eq, Ord, Read, Show)
 
 -- | A Monad that is capable of running an IRC engine.
@@ -60,7 +60,13 @@ emptyChannelState = ChannelState [] []
 startEngine :: Irc irc => Nick -> User -> irc ()
 startEngine nick user = put state >> mapM_ (sendMessage RealTime) outgoing
     where
-        state       = EngineState Map.empty Map.empty nick user $(gitHash)
+        state       = EngineState Map.empty Map.empty nick user
+                    $ T.concat [
+                      $(gitCommitDate)
+                    , " ("
+                    , $(gitHash)
+                    , ")"
+                    ]
         outgoing    = [nickMessage, userMessage]
         nickMessage = Message {
                 prefix     = Nothing

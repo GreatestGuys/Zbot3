@@ -11,7 +11,7 @@ module Zbot.Core.Irc (
 ,   ChannelMode (..)
 
 ,   myNick
-,   myHash
+,   myVersion
 ,   nicks
 ,   channels
 ,   whisper
@@ -38,9 +38,9 @@ import qualified Data.Text as T
 myNick :: Irc irc => irc Nick
 myNick = gets engineStateNick
 
--- | The current git hash of the bot.
-myHash :: Irc irc => irc T.Text
-myHash = gets engineStateHash
+-- | The current bot's current version info.
+myVersion :: Irc irc => irc T.Text
+myVersion = gets engineStateVersion
 
 -- | A list of all nicks in a given channel.
 nicks :: Irc irc => Channel -> irc [Nick]

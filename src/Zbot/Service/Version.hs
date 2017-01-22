@@ -17,6 +17,6 @@ version = unitService "Zbot.Service.Version" handler
 
 handler :: Bot m => Event -> MonadService () m ()
 handler (Shout channel _ "!version") = lift $ do
-    version <- myHash
+    version <- myVersion
     shout channel version
 handler _                            = return ()
