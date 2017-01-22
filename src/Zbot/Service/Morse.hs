@@ -5,37 +5,58 @@ module Zbot.Service.Morse (
 
 import Zbot.Core.Bot
 import Zbot.Core.Service
-import Zbot.Extras.Command
+import Zbot.Extras.Message
 import Zbot.Extras.UnitService
 
 import Control.Monad.Trans.Class (lift)
 import Data.Char (toLower)
 
-import qualified Data.Map as M
+import qualified Data.List as L
+import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 
 
 -- | A service that will translate text into morse code.
 morse :: Bot m => Service m ()
-morse = (unitService  "Zbot.Service.Morse" (onCommand "!morse" handleCommand)) {
+morse = (unitService  "Zbot.Service.Morse" $ onMessage handler) {
       helpSpec = Just HelpSpec {
-              helpAliases = ["!morse"]
-          ,   helpMessage = ["usage: !morse <input>"]
+              helpAliases = ["!morse", "!unmorse"]
+          ,   helpMessage = ["usage: !morse <input>"
+                          ,  "       !unmorse <input>"]
           }
     }
 
-handleCommand :: Bot m => Reply m -> T.Text -> MonadService () m ()
-handleCommand reply arg = lift $ reply $ encodeMorse arg
+handler :: Bot m => Reply m -> T.Text -> MonadService () m ()
+handler reply msg
+    | "!morse"   == cmd = lift . reply $ encodeMorse args
+    | "!unmorse" == cmd = lift . reply $ decodeMorse args
+    | otherwise         = return ()
+    where
+        (cmd,args) = T.breakOn " " msg
 
 encodeMorse :: T.Text -> T.Text
 encodeMorse = T.concatMap encode . T.intersperse ' '
     where
-        encode char = case M.lookup (toLower char) morseCode of
+        encode char = case M.lookup (toLower char) toMorseCode of
             Just code -> code
             Nothing   -> T.singleton char
 
-morseCode :: M.Map Char T.Text
-morseCode =
+decodeMorse :: T.Text -> T.Text
+decodeMorse = T.concat . map decode . L.intercalate [" "] . map chars . words
+      where
+          words = T.splitOn "   "
+
+          chars = T.splitOn " "
+
+          decode char = case M.lookup char fromMorseCode of
+              Just letter -> T.singleton letter
+              Nothing     -> char
+
+fromMorseCode :: M.Map T.Text Char
+fromMorseCode = M.foldrWithKey (flip M.insert) M.empty toMorseCode
+
+toMorseCode :: M.Map Char T.Text
+toMorseCode =
   M.fromList
   [('a', ".-")
   ,('b', "-...")
