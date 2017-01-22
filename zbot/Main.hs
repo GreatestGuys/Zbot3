@@ -29,6 +29,7 @@ import Zbot.Service.Scrollback
 import Zbot.Service.Seen
 import Zbot.Service.Summary
 import Zbot.Service.Uptime
+import Zbot.Service.Version
 
 
 main = zbotMain $ do
@@ -60,3 +61,4 @@ main = zbotMain $ do
     registerService_ $ seen historyHandle
     registerService_ $ summary historyHandle
     uptime historyHandle >>= registerService_
+    registerService_ version
