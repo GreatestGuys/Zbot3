@@ -11,6 +11,7 @@ import Zbot.Core.Service
 import Zbot.Extras.Message
 import Zbot.Extras.Serialize
 
+import Control.Concurrent (threadDelay)
 import Control.Monad.State
 import Data.List (sortBy)
 import Data.Maybe (fromMaybe)
@@ -22,7 +23,7 @@ import qualified Data.Text as T
 
 newtype Reputation = MkReputation (Map.Map Nick Int) deriving (Read, Show)
 
-reputation :: Bot m => Service m Reputation
+reputation :: (MonadIO m, Bot m) => Service m Reputation
 reputation = Service {
         initial     = MkReputation Map.empty
     ,   serialize   = serializeReputation
@@ -62,12 +63,14 @@ serializeReputation (MkReputation m) = serializeShow m
 deserializeReputation :: BS.ByteString -> Maybe Reputation
 deserializeReputation = fmap MkReputation . deserializeRead
 
-handler :: Bot m => Channel -> Reply m -> T.Text -> MonadService Reputation m ()
+handler :: (MonadIO m, Bot m) => Channel -> Reply m -> T.Text -> MonadService Reputation m ()
 handler channel reply msg
     | ["+1", nick]                        <- args = plus nick
     | ["-1", nick]                        <- args = minus nick
     | [(T.stripPrefix "++" -> Just nick)] <- args = plus nick
-    | [(T.stripSuffix "++" -> Just nick)] <- args = plus nick
+    | [(T.stripSuffix "++" -> Just nick)] <- args = do
+                                                      liftIO $ threadDelay 3000000
+                                                      plus nick
     | ["!rep", nick ]                     <- args = replyNickRep nick
     | ["!rep"]                            <- args = replyAllRep
     | ["!circlejerk"]                     <- args = circleJerk
