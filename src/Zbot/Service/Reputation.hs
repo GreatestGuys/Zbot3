@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
 module Zbot.Service.Reputation (
     Reputation
 ,   reputation
@@ -33,6 +34,8 @@ reputation = Service {
         ,   helpMessage      = [
             "usage: +1 [nick]"
         ,   "       -1 [nick]"
+        ,   "       ++[nick]"
+        ,   "       [nick]++"
         ,   "       !rep [nick]"
         ,   "       !circlejerk"
         ,   ""
@@ -61,12 +64,14 @@ deserializeReputation = fmap MkReputation . deserializeRead
 
 handler :: Bot m => Channel -> Reply m -> T.Text -> MonadService Reputation m ()
 handler channel reply msg
-    | ["+1", nick]    <- args = plus nick
-    | ["-1", nick]    <- args = minus nick
-    | ["!rep", nick]  <- args = replyNickRep nick
-    | ["!rep"]        <- args = replyAllRep
-    | ["!circlejerk"] <- args = circleJerk
-    | otherwise               = return ()
+    | ["+1", nick]                        <- args = plus nick
+    | ["-1", nick]                        <- args = minus nick
+    | [(T.stripPrefix "++" -> Just nick)] <- args = plus nick
+    | [(T.stripSuffix "++" -> Just nick)] <- args = plus nick
+    | ["!rep", nick ]                     <- args = replyNickRep nick
+    | ["!rep"]                            <- args = replyAllRep
+    | ["!circlejerk"]                     <- args = circleJerk
+    | otherwise                                   = return ()
     where
         args = T.words msg
 
