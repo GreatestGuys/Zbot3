@@ -10,10 +10,13 @@ import Zbot.Extras.Message
 import Zbot.Extras.Command
 import Zbot.Extras.UnitService
 
+import Control.Concurrent (threadDelay)
 import Control.Monad (liftM, replicateM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
 import Data.List (foldl1')
+import Data.UUID (UUID, toText)
+import Data.UUID.V1 (nextUUID)
 import Safe (readMay)
 
 import System.Random
@@ -44,6 +47,7 @@ defaultOptions = Options { optLevel = 1 }
 
 data Goblin = Goblin {
               name :: T.Text
+            , uuid :: T.Text
             , gender :: T.Text
             , level :: Int
             , str :: Int
@@ -89,7 +93,8 @@ parse args opts
 
 prettyGoblin :: Goblin -> [T.Text]
 prettyGoblin Goblin{..} = [
-        name
+        T.concat [ name, " (", uuid, ")"
+                 ]
     ,   T.concat [ gender, " Goblin Warrior (", t level, ")"
                  ]
     ,   ""
@@ -183,6 +188,7 @@ rangedWeapons = [
 startingGoblin :: MonadIO m => m Goblin
 startingGoblin = do
     name <- randList ["Ort", "Er", "Cronk", "Slozz", "Shig"]
+    uuid <- getUUIDWithBackoff
     str <- 3 `d` 6
     dex <- 3 `d` 6
     con <- 3 `d` 6
@@ -195,6 +201,7 @@ startingGoblin = do
     rangedWeapon <- randList rangedWeapons
     return Goblin {
         name = name
+    ,   uuid = toText uuid
     ,   gender = gender
     ,   level = 1
     ,   str = str - 2
@@ -207,6 +214,15 @@ startingGoblin = do
     ,   skills = skills
     ,   weapons = [meleeWeapon, rangedWeapon]
     }
+    where
+        getUUIDWithBackoff :: MonadIO m => m UUID
+        getUUIDWithBackoff = liftIO $ do
+          uuid <- nextUUID
+          case uuid of
+              Nothing     -> threadDelay 50000
+                          >> getUUIDWithBackoff
+              (Just uuid) -> return uuid
+
 
 levelUp :: MonadIO m => Goblin -> m Goblin
 levelUp goblin@Goblin{..} = do
