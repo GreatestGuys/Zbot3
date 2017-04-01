@@ -61,6 +61,7 @@ library
         ,   transformers
         ,   unix
         ,   utf8-string
+        ,   uuid
         ,   wreq
 
     exposed-modules:
