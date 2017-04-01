@@ -38,6 +38,7 @@ reputation = Service {
         ,   "       ++[nick]"
         ,   "       [nick]++"
         ,   "       !rep [nick]"
+        ,   "       !mindmeld [nick1,nick2,etc]"
         ,   "       !circlejerk"
         ,   ""
         ,   "   The reputation service keeps track of the 'reputation' of"
@@ -51,6 +52,8 @@ reputation = Service {
         ,   "Is given, then the reputation score of all known nicks will be"
         ,   "displayed. Otherwise, if a nick is given, then only the reputation"
         ,   "score for that user is displayed."
+        ,   ""
+        ,   "   !mindmeld can be used to +1 a space separated list of nicks."
         ,   ""
         ,   "   !circlejerk can be used to +1 everyone in the channel."
         ]
@@ -73,6 +76,8 @@ handler channel reply msg
                                                       plus nick
     | ["!rep", nick ]                     <- args = replyNickRep nick
     | ["!rep"]                            <- args = replyAllRep
+    | ("!mindmeld":nicks)                 <- args =  mapM_ plus nicks
+                                                  >> modifyRep (+ (length nicks)) "mindmeld"
     | ["!circlejerk"]                     <- args = circleJerk
     | otherwise                                   = return ()
     where
