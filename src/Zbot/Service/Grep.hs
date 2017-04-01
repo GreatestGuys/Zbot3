@@ -52,9 +52,12 @@ grep historyHandle =
             history <-  drop 1
                     <$> foldHistoryForward historyHandle historyToList []
             let matches = match opts [] history
-            mapM_ reply $ reverse
-                        $ intercalate [colorize [fg Cyan "----"]]
-                        $ map (describe opts) matches
+            case matches of
+                [] -> reply "No matches found."
+                _  -> mapM_ reply
+                    $ reverse
+                    $ intercalate [colorize [fg Cyan "----"]]
+                    $ map (describe opts) matches
 
 data GrepOptions = GrepOptions {
         optContext :: Int
