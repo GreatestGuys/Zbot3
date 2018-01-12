@@ -4,7 +4,6 @@
 module Zbot.Service.GitHub (
     GitHub
 ,   github
-,   reportIssue
 ) where
 
 import Zbot.Core.Bot
@@ -28,6 +27,17 @@ import qualified Data.Text as T
 
 type GitHubAccessToken = T.Text
 
+data Project = Zbot | Peefuck
+
+toProject :: T.Text -> Maybe Project
+toProject "zbot"    = Just Zbot
+toProject "peefuck" = Just Peefuck
+toProject _         = Nothing
+
+getURL :: Project -> String
+getURL Zbot    = "GreatestGuys/Zbot3"
+getURL Peefuck = "fimad/pifuxelck"
+
 newtype GitHub = MkGitHub {
         unGitHub :: Maybe GitHubAccessToken
     }
@@ -41,13 +51,18 @@ github = Service {
     ,   name        = "Zbot.Service.GitHub"
     ,   process     = onMessage handler
     ,   helpSpec    = Just HelpSpec {
-            helpAliases = ["!report"]
+            helpAliases = ["!report", "!close"]
         ,   helpMessage = [
-                    "usage: !report Brief summary of issue"
+                    "usage: !report <project-name> Brief summary of issue"
+                ,   "       !close <project-name> <issue-number>"
                 ,   ""
                 ,   "   The !report command can be used to file GitHub bugs"
-                ,   "against the ZBot3 project. Please do not abuse this. It"
+                ,   "against specific projects. Please do not abuse this. It"
                 ,   "will be taken away if you do."
+                ,   ""
+                ,   "  Supported projects-name's:"
+                ,   "    - zbot"
+                ,   "    - peefuck"
                 ]
         }
     }
@@ -57,17 +72,22 @@ handler :: (Catch.MonadCatch m, MonadIO m, Bot m)
         -> T.Text
         -> MonadService GitHub m ()
 handler reply msg
-        | ("!report":issue)    <- args = githubHandler reportIssue reply
-                                       $ T.intercalate " " issue
-        | ("!close":number:[]) <- args = githubHandler closeIssue reply number
-        | otherwise                    = return ()
+        | ("!report":project:issue)    <- args = githubHandler (report project) reply
+                                               $ T.intercalate " " issue
+        | ("!close":project:number:[]) <- args = githubHandler (close project) reply number
+        | otherwise                            = return ()
         where
-            args = T.words msg
+            report p = maybe emptyGitHubAction reportIssue (toProject p)
+            close  p = maybe emptyGitHubAction closeIssue (toProject p)
+            args   = T.words msg
 
 type GitHubAction = forall m. (MonadIO m) => Reply m -> T.Text -> GitHubAccessToken -> m ()
 
-reportIssue :: GitHubAction
-reportIssue reply issue accessToken = do
+emptyGitHubAction :: GitHubAction
+emptyGitHubAction _ _ _ = return ()
+
+reportIssue :: Project -> GitHubAction
+reportIssue project reply issue accessToken = do
         result <- liftIO $ postWith options issueEndpoint payload
         reply $ toIssueUrl result
         where
@@ -75,7 +95,9 @@ reportIssue reply issue accessToken = do
 
             payload = object ["title" .= issue]
 
-            issueEndpoint = "https://api.github.com/repos/GreatestGuys/Zbot3/issues"
+            issueEndpoint =  "https://api.github.com/repos/"
+                          ++ (getURL project)
+                          ++ "/issues"
 
             -- The result is a JSON object, one of the fields is "url" which is the
             -- URL of the newly created issue.
@@ -84,8 +106,8 @@ reportIssue reply issue accessToken = do
 
             errorMsg = "Encountered an error while filing the issue."
 
-closeIssue :: GitHubAction
-closeIssue reply number accessToken = do
+closeIssue :: Project -> GitHubAction
+closeIssue project reply number accessToken = do
         result <- liftIO $ postWith options issueEndpoint payload
         reply $ toIssueUrl result
         where
@@ -93,7 +115,9 @@ closeIssue reply number accessToken = do
 
             payload = object ["state" .= ("closed" :: T.Text)]
 
-            issueEndpoint =  "https://api.github.com/repos/GreatestGuys/Zbot3/issues/"
+            issueEndpoint =  "https://api.github.com/repos/"
+                          ++ (getURL project)
+                          ++ "/issues/"
                           ++ T.unpack number
 
             -- The result is a JSON object, one of the fields is "url" which is the
