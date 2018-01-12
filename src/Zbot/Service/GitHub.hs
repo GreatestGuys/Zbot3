@@ -77,14 +77,14 @@ handler reply msg
         | ("!close":project:number:[]) <- args = githubHandler (close project) reply number
         | otherwise                            = return ()
         where
-            report p = maybe emptyGitHubAction reportIssue (toProject p)
-            close  p = maybe emptyGitHubAction closeIssue (toProject p)
-            args   = T.words msg
+            report p = maybe (emptyGitHubAction p) reportIssue (toProject p)
+            close  p = maybe (emptyGitHubAction p) closeIssue (toProject p)
+            args     = T.words msg
 
 type GitHubAction = forall m. (MonadIO m) => Reply m -> T.Text -> GitHubAccessToken -> m ()
 
-emptyGitHubAction :: GitHubAction
-emptyGitHubAction _ _ _ = return ()
+emptyGitHubAction :: T.Text -> GitHubAction
+emptyGitHubAction project reply _ _ = reply $ "No project alias: " `T.append` project
 
 reportIssue :: Project -> GitHubAction
 reportIssue project reply issue accessToken = do
