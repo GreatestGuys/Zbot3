@@ -27,16 +27,18 @@ import qualified Data.Text as T
 
 type GitHubAccessToken = T.Text
 
-data Project = Zbot | Peefuck
+data Project = Zbot | Peefuck | Tnakchat
 
 toProject :: T.Text -> Maybe Project
-toProject "zbot"    = Just Zbot
-toProject "peefuck" = Just Peefuck
-toProject _         = Nothing
+toProject "zbot"     = Just Zbot
+toProject "peefuck"  = Just Peefuck
+toProject "tnakchat" = Just Tnakchat
+toProject _          = Nothing
 
 getURL :: Project -> String
-getURL Zbot    = "GreatestGuys/Zbot3"
-getURL Peefuck = "fimad/pifuxelck"
+getURL Zbot     = "GreatestGuys/Zbot3"
+getURL Peefuck  = "fimad/pifuxelck"
+getURL Tnakchat = "fimad/TnakChat"
 
 newtype GitHub = MkGitHub {
         unGitHub :: Maybe GitHubAccessToken
