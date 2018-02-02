@@ -65,11 +65,12 @@ runNetworkedBot :: Server
                 -> Port
                 -> Nick
                 -> User
+                -> Password
                 -> FilePath
                 -> RateLimit
                 -> NetworkedBot ()
                 -> IO ()
-runNetworkedBot server port nick user dataDir rateLimit botInit = do
+runNetworkedBot server port nick user password dataDir rateLimit botInit = do
     socket <- Network.connectTo server $ Network.PortNumber (fromIntegral port)
     hSetBuffering socket NoBuffering
     hSetEncoding socket utf8
@@ -78,7 +79,7 @@ runNetworkedBot server port nick user dataDir rateLimit botInit = do
     flip evalStateT undefined $
         flip evalStateT (NetworkState socket messageChannel) $
             runIOCollective dataDir $ do
-                startEngine nick user
+                startEngine nick user password
                 botInit
                 forever processInput
 

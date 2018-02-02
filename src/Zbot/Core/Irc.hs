@@ -7,6 +7,7 @@ module Zbot.Core.Irc (
 ,   Port
 ,   Nick
 ,   User
+,   Password
 ,   Channel
 ,   ChannelMode (..)
 
