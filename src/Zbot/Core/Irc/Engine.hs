@@ -54,11 +54,20 @@ emptyChannelState = ChannelState [] []
 
 -- | Generates the initial engine state and outgoing messages that are
 -- responsible for bringing up the IRC engine.
-startEngine :: Irc irc => Nick -> User -> irc ()
-startEngine nick user = put state >> mapM_ (sendMessage RealTime) outgoing
+startEngine :: Irc irc => Nick -> User -> Password -> irc ()
+startEngine nick user password =  put state
+                               >> mapM_ (sendMessage RealTime) outgoing
     where
         state       = EngineState Map.empty Map.empty nick user
-        outgoing    = [nickMessage, userMessage]
+        outgoing    = if T.null password
+                      then [nickMessage, userMessage]
+                      else [passMessage, nickMessage, userMessage]
+        passMessage = Message {
+                prefix     = Nothing
+            ,   command    = "PASS"
+            ,   parameters = [password]
+            ,   trailing   = Nothing
+            }
         nickMessage = Message {
                 prefix     = Nothing
             ,   command    = "NICK"
@@ -68,7 +77,7 @@ startEngine nick user = put state >> mapM_ (sendMessage RealTime) outgoing
         userMessage = Message {
                 prefix     = Nothing
             ,   command    = "USER"
-            ,   parameters = [nick, "0", "*"]
+            ,   parameters = [user, "0", "*"]
             ,   trailing   = Just "Zbot v3"
             }
 

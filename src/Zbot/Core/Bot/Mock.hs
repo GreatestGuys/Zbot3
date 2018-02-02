@@ -38,6 +38,6 @@ runMockBot :: FilePath -> MockBot () -> [Event] -> IO ()
 runMockBot dataDir botInit events =
     flip evalStateT undefined $
         runIOCollective dataDir $ do
-            startEngine "mockBot" "mockBot"
+            startEngine "mockBot" "mockBot" "mockPass"
             botInit
             mapM_ processEvent events
