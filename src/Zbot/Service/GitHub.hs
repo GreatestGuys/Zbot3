@@ -65,6 +65,7 @@ github = Service {
                 ,   "  Supported projects-name's:"
                 ,   "    - zbot"
                 ,   "    - peefuck"
+                ,   "    - tnakchat"
                 ]
         }
     }
