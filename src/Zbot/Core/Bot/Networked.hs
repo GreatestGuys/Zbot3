@@ -30,6 +30,7 @@ import qualified Network
 data NetworkState = NetworkState {
     socket         :: Handle
 ,   messageChannel :: Chan.Chan Message
+,   verboseLogging :: Bool
 }
 
 type NetworkedBot = IOCollective (StateT NetworkState (StateT EngineState IO))
@@ -45,19 +46,21 @@ instance Irc NetworkedBot where
     sendMessage RealTime message = do
         socket <- lift $ gets socket
         liftIO $ T.hPutStr socket (render message)
---        liftIO $ T.putStr $ T.concat [
---                "[->IRC] "
---            ,   "(", T.pack $ show RealTime, ") "
---            ,   render message
---            ]
+        verboseLogging <- lift $ gets verboseLogging
+        when verboseLogging $ liftIO $ T.putStr $ T.concat [
+                "[->IRC] "
+            ,   "(", T.pack $ show RealTime, ") "
+            ,   render message
+            ]
     sendMessage BestEffort message = do
         messageChannel <- lift $ gets messageChannel
         liftIO $ Chan.writeChan messageChannel message
---        liftIO $ T.putStr $ T.concat [
---                "[->IRC] "
---            ,   "(", T.pack $ show BestEffort, ") "
---            ,   render message
---            ]
+        verboseLogging <- lift $ gets verboseLogging
+        when verboseLogging $ liftIO $ T.putStr $ T.concat [
+                "[->IRC] "
+            ,   "(", T.pack $ show BestEffort, ") "
+            ,   render message
+            ]
 
 instance Bot NetworkedBot where
 
@@ -68,16 +71,18 @@ runNetworkedBot :: Server
                 -> Password
                 -> FilePath
                 -> RateLimit
+                -> Bool
                 -> NetworkedBot ()
                 -> IO ()
-runNetworkedBot server port nick user password dataDir rateLimit botInit = do
+runNetworkedBot server port nick user password dataDir rateLimit verboseLogging
+                botInit = do
     socket <- Network.connectTo server $ Network.PortNumber (fromIntegral port)
     hSetBuffering socket NoBuffering
     hSetEncoding socket utf8
     messageChannel <- Chan.newChan
     forkIO (writeLoop socket messageChannel rateLimit)
     flip evalStateT undefined $
-        flip evalStateT (NetworkState socket messageChannel) $
+        flip evalStateT (NetworkState socket messageChannel verboseLogging) $
             runIOCollective dataDir $ do
                 startEngine nick user password
                 botInit
@@ -86,13 +91,14 @@ runNetworkedBot server port nick user password dataDir rateLimit botInit = do
 processInput :: NetworkedBot ()
 processInput = do
     socket <- lift $ gets socket
+    verboseLogging <- lift $ gets verboseLogging
     void $ runMaybeT $ do
         rawMessage <- liftIO $ safeHGetLine socket
         message <- MaybeT $ return $ parse $ rawMessage `T.append` "\x0a"
---        liftIO $ T.putStr $ T.concat [
---                "[<-IRC] "
---            ,   render message
---            ]
+        when verboseLogging $ liftIO $ T.putStr $ T.concat [
+                "[<-IRC] "
+            ,   render message
+            ]
         events <- lift $ stepEngine message
         lift $ mapM_ processEvent events
 
