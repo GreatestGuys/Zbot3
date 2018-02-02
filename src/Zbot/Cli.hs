@@ -20,6 +20,7 @@ data Options = Options {
         ,   dataDirFlag  ::  FilePath
         ,   msgRateFlag  ::  Int
         ,   verboseFlag  ::  Bool
+        ,   sslFlag      ::  Bool
     }
 
 textOption :: Mod OptionFields String -> Parser T.Text
@@ -61,7 +62,9 @@ optionsParserInfo = info (helper <*> optionsParser) meta
                 <> help "The maximum messages to send per second (default: 10)")
             <*> switch (long "verbose"
                 <> short 'v'
-                <> help "True to enable verbose logging.")
+                <> help "Enable verbose logging.")
+            <*> switch (long "ssl"
+                <> help "Connect to the IRC server over SSL.")
 
         meta = fullDesc
              <> header "zbot - An IRC bot framework."
@@ -80,4 +83,5 @@ zbotMain init = execParser optionsParserInfo >>= \options ->
         (dataDirFlag options)
         (msgRateFlag options)
         (verboseFlag options)
+        (sslFlag options)
         (mapM_ joinChannel (channelsFlag options) >> init)

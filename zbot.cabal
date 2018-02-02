@@ -36,6 +36,7 @@ library
         ,   base16-bytestring
         ,   binary
         ,   bytestring
+        ,   connection
         ,   containers
         ,   cryptohash
         ,   curl
