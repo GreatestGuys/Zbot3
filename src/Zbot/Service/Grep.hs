@@ -60,11 +60,12 @@ grep historyHandle =
                     $ map (describe opts) matches
 
 data GrepOptions = GrepOptions {
-        optContext :: Int
-    ,   optMatches :: Int
-    ,   optNick    :: Maybe Nick
-    ,   optChannel :: Channel
-    ,   optQuery   :: T.Text
+        optContext    :: Int
+    ,   optMatches    :: Int
+    ,   optIgnoreCmds :: Bool
+    ,   optNick       :: Maybe Nick
+    ,   optChannel    :: Channel
+    ,   optQuery      :: T.Text
     }
 
 data GrepResult = GrepResult {
@@ -78,11 +79,12 @@ data GrepResult = GrepResult {
 
 defaultOptions :: Channel -> GrepOptions
 defaultOptions c = GrepOptions {
-        optContext = 0
-    ,   optMatches = 1
-    ,   optNick    = Nothing
-    ,   optChannel = c
-    ,   optQuery   = "."
+        optContext    = 0
+    ,   optMatches    = 1
+    ,   optIgnoreCmds = True
+    ,   optNick       = Nothing
+    ,   optChannel    = c
+    ,   optQuery      = "."
     }
 
 parse :: T.Text -> GrepOptions -> GrepOptions
@@ -91,6 +93,7 @@ parse args opts
     | ("-c", Just c) <- (flag, intValue)  = parse rest $ opts {optContext = c}
     | ("-C", c)      <- (flag, value    ) = parse rest $ opts {optChannel = c}
     | ("-n", n)      <- (flag, justValue) = parse rest $ opts {optNick = n}
+    | ("-i", Just i) <- (flag, boolValue) = parse rest $ opts {optIgnoreCmds = i}
     | T.null args                         = opts {optQuery = "."}
     | otherwise                           = opts {optQuery = args}
     where
@@ -99,6 +102,7 @@ parse args opts
         rest = T.stripStart valueRest
         intValue = readMay $ T.unpack value
         justValue = Just value
+        boolValue = readMay $ T.unpack value
 
 historyToList :: UTCTime -> Event -> [(UTCTime, Event)] -> [(UTCTime, Event)]
 historyToList time ev@Shout{} acc = (time, ev) : acc
@@ -110,12 +114,13 @@ match :: GrepOptions
       -> [GrepResult]
 match _ _ [] = []
 match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
-    | optMatches <= 0                     = []
-    | testMaybe optNick (/= evNick)       = skip
-    | optChannel /= evChannel             = skip
-    | "!grep" `T.isPrefixOf` evMsg        = skip
-    | not $ evMsg =~ optQuery             = skip
-    | otherwise                           = isMatch
+    | optMatches <= 0                           = []
+    | testMaybe optNick (/= evNick)             = skip
+    | optChannel /= evChannel                   = skip
+    | "!grep" `T.isPrefixOf` evMsg              = skip
+    | not $ evMsg =~ optQuery                   = skip
+    | "!" `T.isPrefixOf` evMsg && optIgnoreCmds = skip
+    | otherwise                                 = isMatch
     where
         testMaybe = flip $ maybe False
 
