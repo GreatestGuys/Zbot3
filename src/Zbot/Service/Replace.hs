@@ -20,25 +20,25 @@ import qualified Data.Text as T
 replace :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 replace history = unitService "Zbot.Service.Replace" handler
     where
-        handler (Shout channel nick msg) = lift $ do
+        handler (Shout channel _ msg) = lift $ do
             maybeLine <- findLastMessage channel
-            handleMessage (shout channel) nick maybeLine msg
+            handleMessage (shout channel) maybeLine msg
         handler _                        = return ()
 
-        handleMessage reply nick (Just line) msg
+        handleMessage reply (Just (line, nick)) msg
             | ("s":from:to:"g":_) <- split msg = handleReplace $ replaceAll from to line
             | ("s":from:to:_)     <- split msg = handleReplace $ replaceOne from to line
             where
                 handleReplace rline = if rline == line
                     then return ()
                     else reply $ nick `T.append` ": " `T.append` rline
-        handleMessage _ _ _ _                    = return ()
+        handleMessage _ _ _                    = return ()
 
         findLastMessage channel = foldHistoryBackward history match Nothing
             where
-                match _ (Shout channel' _ msg) Nothing
+                match _ (Shout channel' nick msg) Nothing
                     | channel == channel'
-                      && not ("s/" `T.isPrefixOf` msg) = Just msg
+                      && not ("s/" `T.isPrefixOf` msg) = Just (msg, nick)
                 match _ _ acc = acc
 
 -- | Split a string on all non-escaped back slashes.
