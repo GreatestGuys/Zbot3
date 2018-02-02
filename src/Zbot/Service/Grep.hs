@@ -33,6 +33,7 @@ grep historyHandle =
                         "usage: !grep"
                     ,   "[-c context]"
                     ,   "[-C channel]"
+                    ,   "[-i ignoreCommands]"
                     ,   "[-n nick]"
                     ,   "[-m matches]"
                     ,   "regex"
