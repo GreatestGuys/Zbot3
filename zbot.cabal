@@ -30,7 +30,6 @@ library
 
     build-depends:
             HTTP
-        ,   HUnit
         ,   aeson
         ,   attoparsec
         ,   base                 >= 4.3 && < 5
