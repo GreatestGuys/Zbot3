@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Zbot.Core.Bot.Mock (
     MockBot
+,   evalMockBot
 ,   runMockBot
 ) where
 
@@ -14,19 +15,20 @@ import Zbot.Core.Service.IO
 import Zbot.Core.Service.Types hiding (Handle)
 
 import Control.Monad.State
+import Control.Monad.Writer
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-type MockBot = IOCollective (StateT EngineState IO)
+type MockBot = IOCollective (WriterT [T.Text] (StateT EngineState IO))
 
 instance MonadState EngineState MockBot where
-    get = lift get
-    put = lift . put
+    get = lift $ lift get
+    put = lift . lift . put
 
 instance Irc MockBot where
     sendMessage priority message =
-        liftIO $ T.putStr $ T.concat [
+        lift $ tell $ return $ T.concat [
                 "[->IRC] "
             ,   "(", T.pack $ show priority, ") "
             ,   render message
@@ -35,9 +37,14 @@ instance Irc MockBot where
 instance Bot MockBot where
 
 runMockBot :: FilePath -> MockBot () -> [Event] -> IO ()
-runMockBot dataDir botInit events =
+runMockBot dataDir botInit events = evalMockBot dataDir botInit events
+                                  >>= mapM_ T.putStr
+
+evalMockBot :: FilePath -> MockBot () -> [Event] -> IO [T.Text]
+evalMockBot dataDir botInit events =
     flip evalStateT undefined $
-        runIOCollective dataDir $ do
-            startEngine "mockBot" "mockBot" "mockPass"
-            botInit
-            mapM_ processEvent events
+        execWriterT $
+            runIOCollective dataDir $ do
+                startEngine "mockBot" "mockBot" "mockPass"
+                botInit
+                mapM_ processEvent events
