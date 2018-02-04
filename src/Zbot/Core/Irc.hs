@@ -2,6 +2,7 @@
 module Zbot.Core.Irc (
     Irc
 ,   Event (..)
+,   Priority (..)
 
 ,   Server
 ,   Port

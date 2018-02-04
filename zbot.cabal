@@ -70,6 +70,7 @@ library
         ,   Zbot.Core.Bot
         ,   Zbot.Core.Bot.Mock
         ,   Zbot.Core.Irc
+        ,   Zbot.Core.Irc.Protocol
         ,   Zbot.Core.Service
         ,   Zbot.Extras.Color
         ,   Zbot.Extras.Command
@@ -111,10 +112,27 @@ library
             Zbot.Core.Bot.Networked
         ,   Zbot.Core.Bot.Types
         ,   Zbot.Core.Irc.Engine
-        ,   Zbot.Core.Irc.Protocol
         ,   Zbot.Core.Irc.Types
         ,   Zbot.Core.Service.IO
         ,   Zbot.Core.Service.Types
         ,   Zbot.Service.History.Entry
         ,   Zbot.Service.History.Log
         ,   Zbot.Service.NGram.Model
+
+test-suite zbot-tests
+    type:                exitcode-stdio-1.0
+    default-language:    Haskell2010
+    hs-source-dirs:      test
+    main-is:             Main.hs
+    build-depends:       base
+                       , HUnit
+                       , tasty
+                       , tasty-hunit
+                       , temporary
+                       , text
+                       , zbot
+
+    other-modules:
+            Zbot.TestCase
+        ,   Zbot.Tests.Dude
+        ,   Zbot.Tests.Reputation
