@@ -18,6 +18,7 @@ import Data.List (intercalate)
 import Data.String (fromString)
 import Data.Time.Clock (UTCTime)
 import Options.Applicative
+import Options.Applicative.Help.Core (parserHelp)
 import Text.Regex.TDFA ((=~))
 import Text.Regex.TDFA.Text ()
 
@@ -29,15 +30,10 @@ grep historyHandle =
     (unitService "Zbot.Service.Grep" $ onMessageWithChannel handler) {
         helpSpec = Just HelpSpec {
                 helpAliases = ["!grep"]
-            ,   helpMessage = [T.intercalate " " [
-                        "usage: !grep"
-                    ,   "[-c context]"
-                    ,   "[-C channel]"
-                    ,   "[-S]"
-                    ,   "[-n nick]"
-                    ,   "[-m matches]"
-                    ,   "regex"
-                    ]]
+            ,   helpMessage = T.lines
+                            . T.pack
+                            . show
+                            $ parserHelp defaultPrefs (mkGrepParser "")
             }
     }
     where
@@ -76,10 +72,12 @@ mkGrepParser :: Channel -> Parser GrepOptions
 mkGrepParser c = GrepOptions
     <$> option auto (long "context"
         <> short 'c'
+        <> metavar "CONTEXT"
         <> value 0
         <> help "The number of lines of context, on either side, of the match (default 0)")
     <*> option auto (long "matches"
         <> short 'm'
+        <> metavar "MATCHES"
         <> value 1
         <> help "The number of matches to return (default 1)")
     <*> switch (long "show-commands"
@@ -87,9 +85,11 @@ mkGrepParser c = GrepOptions
         <> help "Match lines prefixed with '!'")
     <*> optional (textOption (long "nick"
         <> short 'n'
+        <> metavar "NICK"
         <> help "The nick to match against"))
     <*> textOption (long "channel"
         <> short 'C'
+        <> metavar "CHANNEL"
         <> value (T.unpack c)
         <> help "The channel to match against")
     <*> (fmap (T.intercalate " ")
