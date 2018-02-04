@@ -70,6 +70,7 @@ library
         ,   Zbot.Core.Bot
         ,   Zbot.Core.Bot.Mock
         ,   Zbot.Core.Irc
+        ,   Zbot.Core.Irc.Protocol
         ,   Zbot.Core.Service
         ,   Zbot.Extras.Color
         ,   Zbot.Extras.Command
@@ -111,7 +112,6 @@ library
             Zbot.Core.Bot.Networked
         ,   Zbot.Core.Bot.Types
         ,   Zbot.Core.Irc.Engine
-        ,   Zbot.Core.Irc.Protocol
         ,   Zbot.Core.Irc.Types
         ,   Zbot.Core.Service.IO
         ,   Zbot.Core.Service.Types
