@@ -17,7 +17,7 @@ import Control.Monad.Trans.Class (lift)
 import Data.List (intercalate)
 import Data.String (fromString)
 import Data.Time.Clock (UTCTime)
-import Safe (readMay)
+import Options.Applicative
 import Text.Regex.TDFA ((=~))
 import Text.Regex.TDFA.Text ()
 
@@ -33,7 +33,7 @@ grep historyHandle =
                         "usage: !grep"
                     ,   "[-c context]"
                     ,   "[-C channel]"
-                    ,   "[-i ignoreCommands]"
+                    ,   "[-S]"
                     ,   "[-n nick]"
                     ,   "[-m matches]"
                     ,   "regex"
@@ -42,32 +42,61 @@ grep historyHandle =
     }
     where
         handler channel reply msg
-            | ("!grep":rest) <- args = grepCommand channel reply
-                                     $ T.intercalate " " rest
+            | ("!grep":rest) <- args = grepCommand channel reply rest
             | otherwise              = return ()
             where
                 args = T.words msg
 
-        grepCommand channel reply args = lift $ do
-            let opts = parse args $ defaultOptions channel
-            history <-  drop 1
-                    <$> foldHistoryForward historyHandle historyToList []
-            let matches = match opts [] history
-            case matches of
-                [] -> reply "No matches found."
-                _  -> mapM_ reply
-                    $ reverse
-                    $ intercalate [colorize [fg Cyan "----"]]
-                    $ map (describe opts) matches
+        grepCommand channel reply args = lift $
+            case parseGrepOptions parser args of
+                Nothing   -> reply "Failed to parse !grep"
+                Just opts -> do
+                    history <-  drop 1
+                            <$> foldHistoryForward historyHandle historyToList []
+                    let matches = match opts [] history
+                    case matches of
+                        [] -> reply "No matches found."
+                        _  -> mapM_ reply
+                            $ reverse
+                            $ intercalate [colorize [fg Cyan "----"]]
+                            $ map (describe opts) matches
+            where
+                parser = mkGrepParser channel
 
 data GrepOptions = GrepOptions {
-        optContext    :: Int
-    ,   optMatches    :: Int
-    ,   optIgnoreCmds :: Bool
-    ,   optNick       :: Maybe Nick
-    ,   optChannel    :: Channel
-    ,   optQuery      :: T.Text
+        optContext  :: Int
+    ,   optMatches  :: Int
+    ,   optShowCmds :: Bool
+    ,   optNick     :: Maybe Nick
+    ,   optChannel  :: Channel
+    ,   optQuery    :: T.Text
     }
+
+mkGrepParser :: Channel -> Parser GrepOptions
+mkGrepParser c = GrepOptions
+    <$> option auto (long "context"
+        <> short 'c'
+        <> value 0
+        <> help "The number of lines of context, on either side, of the match (default 0)")
+    <*> option auto (long "matches"
+        <> short 'm'
+        <> value 1
+        <> help "The number of matches to return (default 1)")
+    <*> switch (long "show-commands"
+        <> short 'S'
+        <> help "Match lines prefixed with '!'")
+    <*> optional (textOption (long "nick"
+        <> short 'n'
+        <> help "The nick to match against"))
+    <*> textOption (long "channel"
+        <> short 'C'
+        <> value (T.unpack c)
+        <> help "The channel to match against")
+    <*> (fmap (T.intercalate " ")
+              (some $ textArgument (metavar "QUERY")))
+    where
+        textOption = fmap T.pack . strOption
+        textArgument = fmap T.pack . strArgument
 
 data GrepResult = GrepResult {
         resTime    :: UTCTime
@@ -78,32 +107,10 @@ data GrepResult = GrepResult {
     ,   resSuffix  :: [(UTCTime, Nick, [ColorText])]
     }
 
-defaultOptions :: Channel -> GrepOptions
-defaultOptions c = GrepOptions {
-        optContext    = 0
-    ,   optMatches    = 1
-    ,   optIgnoreCmds = True
-    ,   optNick       = Nothing
-    ,   optChannel    = c
-    ,   optQuery      = "."
-    }
-
-parse :: T.Text -> GrepOptions -> GrepOptions
-parse args opts
-    | ("-m", Just m) <- (flag, intValue)  = parse rest $ opts {optMatches = m}
-    | ("-c", Just c) <- (flag, intValue)  = parse rest $ opts {optContext = c}
-    | ("-C", c)      <- (flag, value    ) = parse rest $ opts {optChannel = c}
-    | ("-n", n)      <- (flag, justValue) = parse rest $ opts {optNick = n}
-    | ("-i", Just i) <- (flag, boolValue) = parse rest $ opts {optIgnoreCmds = i}
-    | T.null args                         = opts {optQuery = "."}
-    | otherwise                           = opts {optQuery = args}
-    where
-        (flag, flagRest) = T.breakOn " " args
-        (value, valueRest) = T.breakOn " "  $ T.stripStart flagRest
-        rest = T.stripStart valueRest
-        intValue = readMay $ T.unpack value
-        justValue = Just value
-        boolValue = readMay $ T.unpack value
+parseGrepOptions :: Parser GrepOptions -> [T.Text] -> Maybe GrepOptions
+parseGrepOptions parser = getParseResult
+                        . execParserPure defaultPrefs (info parser fullDesc)
+                        . fmap (T.unpack)
 
 historyToList :: UTCTime -> Event -> [(UTCTime, Event)] -> [(UTCTime, Event)]
 historyToList time ev@Shout{} acc = (time, ev) : acc
@@ -115,13 +122,13 @@ match :: GrepOptions
       -> [GrepResult]
 match _ _ [] = []
 match opts@GrepOptions{..} prefix (ev@(time, Shout evChannel evNick evMsg):evs)
-    | optMatches <= 0                           = []
-    | testMaybe optNick (/= evNick)             = skip
-    | optChannel /= evChannel                   = skip
-    | "!grep" `T.isPrefixOf` evMsg              = skip
-    | not $ evMsg =~ optQuery                   = skip
-    | "!" `T.isPrefixOf` evMsg && optIgnoreCmds = skip
-    | otherwise                                 = isMatch
+    | optMatches <= 0                             = []
+    | testMaybe optNick (/= evNick)               = skip
+    | optChannel /= evChannel                     = skip
+    | "!grep" `T.isPrefixOf` evMsg                = skip
+    | not $ evMsg =~ optQuery                     = skip
+    | "!" `T.isPrefixOf` evMsg && not optShowCmds = skip
+    | otherwise                                   = isMatch
     where
         testMaybe = flip $ maybe False
 
