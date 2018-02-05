@@ -5,6 +5,7 @@ module Zbot.Cli (
 import Zbot.Core.Bot
 import Zbot.Core.Irc
 
+import Data.Semigroup ((<>))
 import Options.Applicative
 
 import qualified Data.Text as T

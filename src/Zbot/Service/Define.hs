@@ -57,10 +57,10 @@ scrapeRandom term = do
                 Just $ format term (replace randomTerm term def)
 
 meaning :: Scraper T.Text T.Text
-meaning = text $ Any @: [hasClass "meaning"]
+meaning = text $ AnyTag @: [hasClass "meaning"]
 
 header :: Scraper T.Text T.Text
-header = text $ Any @: [hasClass "word"]
+header = text $ AnyTag @: [hasClass "word"]
 
 format :: T.Text -> T.Text -> T.Text
 format word def = T.concat [word, ": ", def']
