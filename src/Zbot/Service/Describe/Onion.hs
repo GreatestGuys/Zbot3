@@ -20,6 +20,6 @@ describeOnion url
 
 title :: Scraper T.Text T.Text
 title = do
-    fullTitle <- text "title"
+    fullTitle <- text $ tagSelector "title"
     let shortTitle = T.strip $ T.takeWhile ('-' /=) fullTitle
     return $ T.pack "Breaking News: " `T.append` shortTitle

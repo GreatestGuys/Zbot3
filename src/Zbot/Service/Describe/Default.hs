@@ -23,7 +23,7 @@ description = metaDescription
 
 scrapeMetaTag :: String -> Scraper T.Text T.Text
 scrapeMetaTag name = do
-    content <- attr "content" $ "meta" @: ["name" @= name]
+    content <- attr "content" $ (TagString "meta") @: [(AttributeString "name") @= name]
     if T.null content then empty else return content
 
 metaDescription :: Scraper T.Text T.Text
@@ -36,4 +36,4 @@ metaTwitterDescription :: Scraper T.Text T.Text
 metaTwitterDescription = scrapeMetaTag "twitter:description"
 
 title :: Scraper T.Text T.Text
-title = text "title"
+title = text $ tagSelector "title"

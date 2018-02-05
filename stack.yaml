@@ -3,4 +3,4 @@ packages:
 - '.'
 extra-deps:
 - regex-tdfa-text-1.0.0.3
-resolver: nightly-2016-02-05
+resolver: lts-10.4

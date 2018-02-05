@@ -15,6 +15,7 @@ import Zbot.Service.History
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Trans.Class (lift)
 import Data.List (intercalate)
+import Data.Semigroup ((<>))
 import Data.String (fromString)
 import Data.Time.Clock (UTCTime)
 import Options.Applicative

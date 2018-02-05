@@ -19,6 +19,6 @@ describeSpotify url
 
 info :: Scraper T.Text T.Text
 info = do
-    title <- text $ Any @: [hasClass "primary-title"]
-    artist <- text $ Any @: [hasClass "secondary-title"]
+    title <- text $ AnyTag @: [hasClass "primary-title"]
+    artist <- text $ AnyTag @: [hasClass "secondary-title"]
     return $ T.concat [title, T.pack " by ", artist]
