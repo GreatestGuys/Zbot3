@@ -1,3 +1,4 @@
+{-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 module Zbot.Core.Irc.Protocol (
@@ -73,22 +74,26 @@ instance Parse Message where
             toMessage (Atto.Done _ result)   = Just result
 
 parseMessage :: Atto.Parser Message
-parseMessage = Message
-    <$> parseMaybe parsePrefix
-    <*> parseCommand
-    <*> parseParams
-    <*> parseMaybe parseTrailing
-    <*  Atto.string "\x0d\x0a"
+parseMessage = message <* Atto.string "\x0d\x0a"
+    where message = do
+            prefix <- parseMaybe parsePrefix
+            command <- parseCommand
+            parameters <- parseParams
+            trailing <- parseMaybe parseTrailing
+
+            pure Message{..}
 
 parsePrefix :: Atto.Parser Prefix
 parsePrefix =
     Atto.char ':' >> Atto.choice [parseClientPrefix, parseServerPrefix]
 
 parseClientPrefix :: Atto.Parser Prefix
-parseClientPrefix = ClientPrefix
-    <$> parseTextEndedBy1 '!'
-    <*> parseTextEndedBy1 '@'
-    <*> parseTextEndedBy1 ' '
+parseClientPrefix = do
+    nick <- parseTextEndedBy1 '!'
+    user <- parseTextEndedBy1 '@'
+    host <- parseTextEndedBy1 ' '
+
+    pure ClientPrefix{..}
 
 parseServerPrefix :: Atto.Parser Prefix
 parseServerPrefix = ServerPrefix
