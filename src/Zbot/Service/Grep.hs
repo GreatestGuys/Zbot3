@@ -1,3 +1,4 @@
+{-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 module Zbot.Service.Grep (
@@ -70,31 +71,33 @@ data GrepOptions = GrepOptions {
     }
 
 mkGrepParser :: Channel -> Parser GrepOptions
-mkGrepParser c = GrepOptions
-    <$> option auto (long "context"
-        <> short 'c'
-        <> metavar "CONTEXT"
-        <> value 0
-        <> help "The number of lines of context, on either side, of the match (default 0)")
-    <*> option auto (long "matches"
-        <> short 'm'
-        <> metavar "MATCHES"
-        <> value 1
-        <> help "The number of matches to return (default 1)")
-    <*> switch (long "show-commands"
-        <> short 'S'
-        <> help "Match lines prefixed with '!'")
-    <*> optional (textOption (long "nick"
-        <> short 'n'
-        <> metavar "NICK"
-        <> help "The nick to match against"))
-    <*> textOption (long "channel"
-        <> short 'C'
-        <> metavar "CHANNEL"
-        <> value (T.unpack c)
-        <> help "The channel to match against")
-    <*> (fmap (T.intercalate " ")
-              (some $ textArgument (metavar "QUERY")))
+mkGrepParser c = do
+    optContext <- option auto (long "context"
+               <> short 'c'
+               <> metavar "CONTEXT"
+               <> value 0
+               <> help "The number of lines of context, on either side, of the match (default 0)")
+    optMatches <- option auto (long "matches"
+               <> short 'm'
+               <> metavar "MATCHES"
+               <> value 1
+               <> help "The number of matches to return (default 1)")
+    optShowCmds <- switch (long "show-commands"
+                <> short 'S'
+                <> help "Match lines prefixed with '!'")
+    optNick <- optional (textOption (long "nick"
+            <> short 'n'
+            <> metavar "NICK"
+            <> help "The nick to match against"))
+    optChannel <- textOption (long "channel"
+               <> short 'C'
+               <> metavar "CHANNEL"
+               <> value (T.unpack c)
+               <> help "The channel to match against")
+    optQuery <-  (T.intercalate " ")
+             <$> (some . textArgument $ metavar "QUERY")
+
+    pure GrepOptions{..}
     where
         textOption = fmap T.pack . strOption
         textArgument = fmap T.pack . strArgument

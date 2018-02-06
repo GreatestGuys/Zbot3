@@ -1,3 +1,5 @@
+{-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE RecordWildCards #-}
 module Zbot.Cli (
     zbotMain
 )   where
@@ -31,41 +33,43 @@ optionsParserInfo :: ParserInfo Options
 optionsParserInfo = info (helper <*> optionsParser) meta
     where
         optionsParser :: Parser Options
-        optionsParser = Options
-            <$> strOption (long "server"
-                <> metavar "HOST"
-                <> help "The IRC server to connect to")
-            <*> option auto (long "port"
-                <> metavar "PORT"
-                <> value 6667
-                <> help "The port the server is listening on (default: 6667)")
-            <*> textOption (long "nick"
-                <> metavar "NICK"
-                <> value "zbot3"
-                <> help "The nick that the bot should use (default: zbot3)")
-            <*> textOption (long "user"
-                <> metavar "USER"
-                <> value ""
-                <> help "The user the bot should use (default: same as nick)")
-            <*> textOption (long "password"
-                <> metavar "PASSWORD"
-                <> value ""
-                <> help "The password the bot should connect with")
-            <*> some (textOption (long "channel"
-                <> metavar "CHANNEL,..."
-                <> help "The channels that the bot should join"))
-            <*> strOption (long "data"
-                <> metavar "DIRECTORY"
-                <> help "The directory to store service data files in")
-            <*> option auto (long "rate-limit"
-                <> metavar "INT"
-                <> value 10
-                <> help "The maximum messages to send per second (default: 10)")
-            <*> switch (long "verbose"
-                <> short 'v'
-                <> help "Enable verbose logging.")
-            <*> switch (long "ssl"
-                <> help "Connect to the IRC server over SSL.")
+        optionsParser = do
+            serverFlag <- strOption (long "server"
+                       <> metavar "HOST"
+                       <> help "The IRC server to connect to")
+            portFlag <- option auto (long "port"
+                     <> metavar "PORT"
+                     <> value 6667
+                     <> help "The port the server is listening on (default: 6667)")
+            nickFlag <- textOption (long "nick"
+                     <> metavar "NICK"
+                     <> value "zbot3"
+                     <> help "The nick that the bot should use (default: zbot3)")
+            userFlag <- textOption (long "user"
+                     <> metavar "USER"
+                     <> value ""
+                     <> help "The user the bot should use (default: same as nick)")
+            passwordFlag <- textOption (long "password"
+                         <> metavar "PASSWORD"
+                         <> value ""
+                         <> help "The password the bot should connect with")
+            channelsFlag <- some (textOption (long "channel"
+                         <> metavar "CHANNEL,..."
+                         <> help "The channels that the bot should join"))
+            dataDirFlag <- strOption (long "data"
+                        <> metavar "DIRECTORY"
+                        <> help "The directory to store service data files in")
+            msgRateFlag <- option auto (long "rate-limit"
+                        <> metavar "INT"
+                        <> value 10
+                        <> help "The maximum messages to send per second (default: 10)")
+            verboseFlag <- switch (long "verbose"
+                        <> short 'v'
+                        <> help "Enable verbose logging.")
+            sslFlag <- switch (long "ssl"
+                    <> help "Connect to the IRC server over SSL.")
+
+            pure Options{..}
 
         meta = fullDesc
              <> header "zbot - An IRC bot framework."
