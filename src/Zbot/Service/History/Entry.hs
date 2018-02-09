@@ -95,6 +95,7 @@ instance Binary.Binary Event where
         putEventType Six
         putText nick
         putText channel
+    put (Time _) = return ()
 
 getWord8 :: Binary.Get Word8
 getWord8 = Binary.get
