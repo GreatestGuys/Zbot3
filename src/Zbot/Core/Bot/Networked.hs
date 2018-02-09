@@ -17,6 +17,7 @@ import Zbot.Core.Service.Types hiding (Handle)
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.State
 import Control.Monad.Trans.Maybe
+import Data.Time (getCurrentTime)
 
 import qualified Control.Concurrent.Chan as Chan
 import qualified Data.Text as T
@@ -109,7 +110,8 @@ processInput = do
             ,   render message
             ]
         events <- lift $ stepEngine message
-        lift $ mapM_ processEvent events
+        timestamp <- Time <$> liftIO getCurrentTime
+        lift $ mapM_ processEvent (timestamp:events)
 
 writeLoop :: Network.Connection -> Chan.Chan Message -> RateLimit -> IO ()
 writeLoop socket messageChannel rateLimit = forever $ do

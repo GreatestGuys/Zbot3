@@ -13,6 +13,7 @@ module Zbot.Core.Irc.Types (
 ) where
 
 import qualified Data.Text as T
+import Data.Time (UTCTime)
 
 
 type Server = String
@@ -46,4 +47,5 @@ data Event
     | Initialize  -- ^ An event that is broadcast when the bot first connects to
                   --   an IRC server. This event may be broadcast multiple times
                   --   if the bot connects multiple times.
+    | Time UTCTime
     deriving (Eq, Ord, Show, Read)
