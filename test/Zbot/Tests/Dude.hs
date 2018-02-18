@@ -9,19 +9,66 @@ import Zbot.TestCase
 
 import Test.Tasty
 
+import Data.Time
+
 
 services = registerService_ dude
 
 dudeTests = testGroup "Dude Tests" [
     mockBotTestCase
-      "Positive Dude Test"
+      "- responds to o/ with \\o"
       services
-      [Shout "#channel" "nick" "o/"]
+      [ Time (ts !! 0), Shout "#channel" "nick" "o/"
+      , Time (ts !! 5)]
       [replyOutput "#channel" "\\o"]
 
   , mockBotTestCase
-      "Negative Dude Test"
+      "- responds to \\o with o/"
       services
-      [Shout "#channel" "nick" "o"]
+      [ Time (ts !! 0), Shout "#channel" "nick" "\\o"
+      , Time (ts !! 5)]
+      [replyOutput "#channel" "o/"]
+
+  , mockBotTestCase
+      "- no response if hanging for under 5 minutes"
+      services
+      [ Time (ts !! 0), Shout "#channel" "nick" "o/"
+      , Time (ts !! 4)]
       []
+
+  , mockBotTestCase
+      "- only reponds to dudes still left hanging"
+      services
+      [ Time (ts !! 0), Shout "#channel" "nick" "o/", Shout "#channel" "nick2" "\\o"
+      , Time (ts !! 5)]
+      []
+
+  , mockBotTestCase
+      "- hangings dudes are matched FIFO"
+      services
+      [ Time (ts !! 0), Shout "#channel" "nick" "o/"
+      , Time (ts !! 3), Shout "#channel" "nick2" "o/"
+      , Time (ts !! 4), Shout "#channel" "nick3" "\\o"
+      , Time (ts !! 5)]
+      []
+
+  , mockBotTestCase
+      "- dude service respects channels"
+      services
+      [ Time (ts !! 0), Shout "#channel" "nick" "o/", Shout "#channel2" "nick2" "\\o"
+      , Time (ts !! 5)]
+      [ replyOutput "#channel" "\\o"
+      , replyOutput "#channel2" "o/"]
+
+  , mockBotTestCase
+      "- doesn't leave big headed doods (BHDs) hanging"
+      services
+      [ Time (ts !! 0), Shout "#channel" "nick" "O/"
+      , Time (ts !! 5), Shout "#channel" "nick" "\\O"
+      , Time (ts !! 10)]
+      [ replyOutput "#channel" "\\o"
+      , replyOutput "#channel" "o/"]
   ]
+    where
+        ts = iterate (addUTCTime 60)
+           $ UTCTime (ModifiedJulianDay 0) 0
