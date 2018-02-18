@@ -68,6 +68,31 @@ dudeTests = testGroup "Dude Tests" [
       , Time (ts !! 10)]
       [ replyOutput "#channel" "\\o"
       , replyOutput "#channel" "o/"]
+
+  , mockBotTestCase
+      "- dudes are expired after they've seen 5 non-dude lines"
+      services
+      [ Time (ts !! 0), Shout "#channel" "nick" "o/"
+      , Shout "#channel" "nick1" "1"
+      , Shout "#channel" "nick2" "2"
+      , Shout "#channel" "nick3" "3"
+      , Shout "#channel" "nick4" "4"
+      , Shout "#channel" "nick4" "o/"
+      , Shout "#channel" "nick5" "5"
+      , Time (ts !! 1)]
+      [replyOutput "#channel" "\\o"]
+
+  , mockBotTestCase
+      "- dudes don't expire if lines spoken are under 5 and minutes hung are under 5"
+      services
+      [ Time (ts !! 0), Shout "#channel" "nick" "o/"
+      , Shout "#channel" "nick1" "1"
+      , Shout "#channel" "nick2" "2"
+      , Shout "#channel" "nick3" "3"
+      , Shout "#channel" "nick4" "4"
+      , Shout "#channel" "nick4" "o/"
+      , Time (ts !! 4)]
+      []
   ]
     where
         ts = iterate (addUTCTime 60)
