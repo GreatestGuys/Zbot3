@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Zbot.Service.Dude (
     dude
@@ -15,9 +16,10 @@ import Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as M
 
 
--- Isomorphic to `Either (NonEmpty UTCTime) (NonEmpty UTCTime)`.
-data Dudes = LeftDudes (NE.NonEmpty UTCTime)
-           | RightDudes (NE.NonEmpty UTCTime)
+type Dude = (UTCTime, Int)
+
+data Dudes = LeftDudes (NE.NonEmpty Dude)
+           | RightDudes (NE.NonEmpty Dude)
 
 data DudeType = LeftDude | RightDude
 
@@ -45,10 +47,25 @@ dudeHandler event
     , isLeftDude input        =  handleDude channel LeftDude
     | (Shout channel _ input) <- event
     , isRightDude input       =  handleDude channel RightDude
+    | (Shout channel _ _)     <- event
+                              =  updateLines channel
     | otherwise               =  return ()
     where
         isLeftDude input  = any (== input) ["o/", "O/"]
         isRightDude input = any (== input) ["\\o", "\\O"]
+
+        updateLines :: Bot m => Channel -> MonadService DudeState m ()
+        updateLines channel = do
+            (DudeState t m) <- get
+            put $ DudeState t $ M.adjust (\case
+                                            LeftDudes dudes  -> LeftDudes
+                                                             .  fmap (\case (t,i) -> (t,i+1))
+                                                             $  dudes
+                                            RightDudes dudes -> RightDudes
+                                                             .  fmap (\case (t,i) -> (t,i+1))
+                                                             $  dudes)
+                                         channel
+                                         m
 
         updateTime :: Bot m => UTCTime -> MonadService DudeState m ()
         updateTime t = do
@@ -78,12 +95,14 @@ dudeHandler event
 -- have been hanging for under 5 minutes and those that have been hanging
 -- for over.
 partitionDudes :: UTCTime -> Dudes -> (Maybe Dudes, Maybe Dudes)
-partitionDudes t dudes   = case dudes of
+partitionDudes t dudes = case dudes of
     LeftDudes dudes  -> partitionDudes' t LeftDudes dudes
     RightDudes dudes -> partitionDudes' t RightDudes dudes
     where
         partitionDudes' t duder dudes =
-            let (hanging, expired) = NE.partition (\d -> (t `diffUTCTime` d) < 300) dudes
+            let (hanging, expired) = NE.partition (\(t',l) -> (t `diffUTCTime` t') < 300
+                                                           && (l < 5))
+                                                  dudes
             in  (mkDudes duder hanging, mkDudes duder expired)
 
         mkDudes duder dudes = fmap duder $ NE.nonEmpty dudes
@@ -92,13 +111,13 @@ partitionDudes t dudes   = case dudes of
 -- depending on whether or not the dudetype passed in is the same or
 -- the opposite of the dudes currently hanging.
 updateDudes :: UTCTime -> DudeType -> Maybe Dudes -> Maybe Dudes
-updateDudes t LeftDude Nothing                    = Just $ LeftDudes $ t :| []
-updateDudes t LeftDude (Just (LeftDudes dudes))   = Just $ LeftDudes $ NE.cons t dudes
+updateDudes t LeftDude Nothing                    = Just $ LeftDudes $ (t,0) :| []
+updateDudes t LeftDude (Just (LeftDudes dudes))   = Just $ LeftDudes $ NE.cons (t,0) dudes
 updateDudes _ LeftDude (Just (RightDudes dudes))  = fmap RightDudes
                                                   $ NE.nonEmpty
                                                   $ NE.init dudes
-updateDudes t RightDude Nothing                   = Just $ RightDudes $ t :| []
-updateDudes t RightDude (Just (RightDudes dudes)) = Just $ RightDudes $ NE.cons t dudes
+updateDudes t RightDude Nothing                   = Just $ RightDudes $ (t,0) :| []
+updateDudes t RightDude (Just (RightDudes dudes)) = Just $ RightDudes $ NE.cons (t,0) dudes
 updateDudes _ RightDude (Just (LeftDudes dudes))  = fmap LeftDudes
                                                   $ NE.nonEmpty
                                                   $ NE.init dudes
