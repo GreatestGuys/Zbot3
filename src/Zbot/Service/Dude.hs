@@ -1,5 +1,5 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 module Zbot.Service.Dude (
     dude
 )   where
@@ -10,18 +10,14 @@ import Zbot.Core.Service
 
 import Control.Monad.State
 import Control.Monad.Trans.Class (lift)
+import Data.Bifunctor (bimap, first)
+import Data.Bitraversable (bitraverse)
 import Data.Time (diffUTCTime, UTCTime)
 
 import Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as M
+import qualified Data.Text as T
 
-
-type Dude = (UTCTime, Int)
-
-data Dudes = LeftDudes (NE.NonEmpty Dude)
-           | RightDudes (NE.NonEmpty Dude)
-
-data DudeType = LeftDude | RightDude
 
 type LatestTime = Maybe UTCTime
 
@@ -42,82 +38,139 @@ dude = Service {
 
 dudeHandler :: Bot m => Event -> MonadService DudeState m ()
 dudeHandler event
-    | (Time t) <- event       =  updateTime t
+    | (Time t)                <- event
+                               = updateTime t >> expireDudes
     | (Shout channel _ input) <- event
-    , isLeftDude input        =  handleDude channel LeftDude
-    | (Shout channel _ input) <- event
-    , isRightDude input       =  handleDude channel RightDude
-    | (Shout channel _ _)     <- event
-                              =  updateLines channel
-    | otherwise               =  return ()
+                               = handleShout channel input
+    | otherwise                = return ()
     where
-        isLeftDude input  = any (== input) ["o/", "O/"]
-        isRightDude input = any (== input) ["\\o", "\\O"]
+        handleShout channel input
+            | isLeftDude input  = handleDude channel LeftDude
+            | isRightDude input = handleDude channel RightDude
+            | otherwise         = updateLines channel
+            where
+                isLeftDude input  = any (== input) ["o/", "O/"]
+                isRightDude input = any (== input) ["\\o", "\\O"]
 
-        updateLines :: Bot m => Channel -> MonadService DudeState m ()
-        updateLines channel = do
-            (DudeState t m) <- get
-            put $ DudeState t $ M.adjust (\case
-                                            LeftDudes dudes  -> LeftDudes
-                                                             .  fmap (\case (t,i) -> (t,i+1))
-                                                             $  dudes
-                                            RightDudes dudes -> RightDudes
-                                                             .  fmap (\case (t,i) -> (t,i+1))
-                                                             $  dudes)
-                                         channel
-                                         m
+                updateLines :: Bot m => Channel -> MonadService DudeState m ()
+                updateLines channel = do
+                    (DudeState t m) <- get
+                    let m' = M.adjust ageDudes channel m
+                    put $ DudeState t m'
+
+                handleDude :: Bot m => Channel -> DudeType -> MonadService DudeState m ()
+                handleDude channel dtype = do
+                    (DudeState t m) <- get
+                    case t of
+                        Nothing -> return ()
+                        Just t' -> put $ DudeState t (M.alter (updateDudes t' dtype) channel m)
 
         updateTime :: Bot m => UTCTime -> MonadService DudeState m ()
         updateTime t = do
             (DudeState _ m) <- get
-            let dudesPartitioned = M.map (partitionDudes t) m
-            let hangingDudes = M.mapMaybe fst dudesPartitioned
-            let expiredDudes = M.mapMaybe snd dudesPartitioned
-            M.traverseWithKey (\channel dudes -> lift $
-                case dudes of
-                    LeftDudes ds  -> replicateM_ (NE.length ds) (shout channel "\\o")
-                    RightDudes ds -> replicateM_ (NE.length ds) (shout channel "o/"))
+            put $ DudeState (Just t) m
+
+        expireDudes :: Bot m => MonadService DudeState m ()
+        expireDudes = do
+            (DudeState (Just t) m) <- get
+            let dudesPartitioned = M.map (partitionDudes $ isExpired t) m
+            let hangingDudes = M.mapMaybe snd dudesPartitioned
+            let expiredDudes = M.mapMaybe fst dudesPartitioned
+            M.traverseWithKey (\channel (dudes, dtype) -> lift $
+                replicateM_ (NE.length dudes) (shout channel . showDude $ flipDude dtype))
                               expiredDudes
             put $ DudeState (Just t) hangingDudes
 
-        handleDude :: Bot m => Channel -> DudeType -> MonadService DudeState m ()
-        handleDude channel dtype = do
-            (DudeState t m) <- get
-            case t of
-                Nothing -> return ()
-                Just t' -> put $ DudeState t (M.alter (updateDudes t' dtype) channel m)
+----------------------------------------------------------------
+--------------------------- Dude API ---------------------------
+----------------------------------------------------------------
 
------------------------------------
--- Dude related helper functions --
------------------------------------
+data Dude = Dude {
+            dudeBirthday :: UTCTime -- Timestamp for original o/
+          , dudeAge :: Int          -- # of non-dude lines spoken
+          }
 
--- | Given Dudes and the current time, partitions them into Dudes that
--- have been hanging for under 5 minutes and those that have been hanging
--- for over.
-partitionDudes :: UTCTime -> Dudes -> (Maybe Dudes, Maybe Dudes)
-partitionDudes t dudes = case dudes of
-    LeftDudes dudes  -> partitionDudes' t LeftDudes dudes
-    RightDudes dudes -> partitionDudes' t RightDudes dudes
+type Dudes = (NE.NonEmpty Dude, DudeType)
+
+data DudeType =
+-- | There once was a dude who hung left,
+--   whose pants grew quite tight from his heft.
+--     A week since last blown
+--     and at home all alone,
+--   his hand by itself proved quite deft.
+                LeftDude
+-- | There once was a dude who hung right,
+--   who found himself needy one night.
+--     Three swipes til a match,
+--     his tool down the hatch,
+--   he wanted a kiss, not a bite.
+              | RightDude
+              deriving Eq
+
+-- | A dude without a birthday
+--      is no dude at all.
+--                \o/
+--                | |
+--                |-|
+mkDude :: UTCTime -> Dude
+mkDude dudeBirthday = Dude {dudeAge = 0, ..}
+
+-- | All alone a-dude awaits
+--    soulmates separated
+-- o/ ......................
+-- time trickles.. tediously
+-- Forever,,,,,,,,,,,,,,,,,,
+--  ...... ..... \o ... ...
+-- . .... ....... o/ .... ..
+-- .. .. .......? o ?.......
+-- ,,,  ,,,,,,,,,,,,,,alone?
+flipDude :: DudeType -> DudeType
+flipDude LeftDude  = RightDude
+flipDude RightDude = LeftDude
+
+-- | I'll show you mine
+showDude :: DudeType -> T.Text
+-- if you show
+showDude LeftDude  = "o/"
+-- me yours. :>
+showDude RightDude = "\\o"
+
+-- | Another line goes by,
+-- in the blink of an eye.
+--
+-- How old these dudes grow
+-- the most ancient of bros.
+ageDudes :: Dudes -> Dudes
+ageDudes dudes = first (fmap ageDude) dudes
     where
-        partitionDudes' t duder dudes =
-            let (hanging, expired) = NE.partition (\(t',l) -> (t `diffUTCTime` t') < 300
-                                                           && (l < 5))
-                                                  dudes
-            in  (mkDudes duder hanging, mkDudes duder expired)
+        ageDude Dude{..} = Dude{dudeAge=dudeAge+1, ..}
 
-        mkDudes duder dudes = fmap duder $ NE.nonEmpty dudes
+-- | a dude is too old /
+-- if they've hung for five minutes /
+-- or seen five plus lines
+isExpired :: UTCTime -> Dude -> Bool
+isExpired t Dude{..} =  dudeAge >= 5
+                     || (t `diffUTCTime` dudeBirthday) >= 300
 
--- | Either adds a new dude to the hanging list or pops the oldest dude
--- depending on whether or not the dudetype passed in is the same or
--- the opposite of the dudes currently hanging.
+-- | A function from dudes to truths,
+-- gives a function from dudes to dudes and dudes.
+-- Or not!
+partitionDudes :: (Dude -> Bool)
+               -> Dudes -> (Maybe Dudes, Maybe Dudes)
+partitionDudes p (dudes,dt) = mapTuple (bitraverseFst NE.nonEmpty)
+                            . mapTuple (\x -> (x, dt))
+                            $ NE.partition p dudes
+    where
+        mapTuple = join bimap
+        bitraverseFst f = bitraverse f pure
+
+-- | Bikens a UTCTime and DudeType follunly. If jishith
+-- Maybe Dudes then ranak a pazmow so givvishly.
+--  (e.g. updateDudes 0 RightDude Nothing)
 updateDudes :: UTCTime -> DudeType -> Maybe Dudes -> Maybe Dudes
-updateDudes t LeftDude Nothing                    = Just $ LeftDudes $ (t,0) :| []
-updateDudes t LeftDude (Just (LeftDudes dudes))   = Just $ LeftDudes $ NE.cons (t,0) dudes
-updateDudes _ LeftDude (Just (RightDudes dudes))  = fmap RightDudes
-                                                  $ NE.nonEmpty
-                                                  $ NE.init dudes
-updateDudes t RightDude Nothing                   = Just $ RightDudes $ (t,0) :| []
-updateDudes t RightDude (Just (RightDudes dudes)) = Just $ RightDudes $ NE.cons (t,0) dudes
-updateDudes _ RightDude (Just (LeftDudes dudes))  = fmap LeftDudes
-                                                  $ NE.nonEmpty
-                                                  $ NE.init dudes
+updateDudes t new Nothing             = Just (mkDude t :| [], new)
+updateDudes t new (Just (dudes, old))
+    | new == old                      = Just (NE.cons (mkDude t) dudes, old)
+    | otherwise                       = fmap (\x -> (x, old))
+                                      . NE.nonEmpty
+                                      $ NE.init dudes
