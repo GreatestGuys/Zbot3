@@ -37,7 +37,7 @@ dudeTests = testGroup "Dude Tests" [
       []
 
   , mockBotTestCase
-      "- only reponds to dudes still left hanging"
+      "- only responds to dudes still left hanging"
       services
       [ Time (ts !! 0), Shout "#channel" "nick" "o/", Shout "#channel" "nick2" "\\o"
       , Time (ts !! 5)]
