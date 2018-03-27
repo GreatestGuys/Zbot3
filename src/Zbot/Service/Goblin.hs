@@ -93,7 +93,7 @@ parse args opts
 
 prettyGoblin :: Goblin -> [T.Text]
 prettyGoblin Goblin{..} = [
-        T.concat [ "Figuratively: ", name, " (Literally: ", uuid, ")"
+        T.concat [ name, "(Figurative) (", uuid, "(Literal))"
                  ]
     ,   T.concat [ gender, " Goblin Warrior (", t level, ")"
                  ]
