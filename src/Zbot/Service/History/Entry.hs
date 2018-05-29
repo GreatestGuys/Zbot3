@@ -37,6 +37,8 @@ instance Binary.Binary Entry where
         _         <- getWord16
         return $ Entry timestamp event
 
+    -- Event types that we don't want to include in history logs
+    -- should be blacklisted below.
     put (Entry _ (Time _))      = return ()
     put (Entry timestamp event) = do
         let timeBytes = encodedSize timestamp
@@ -55,7 +57,7 @@ instance Binary.Binary UTCTime where
     put = putWord64 . round . utcTimeToPOSIXSeconds
 
 -- | Unique labels for our event types
-data EventType = Zero | One | Two | Three | Four | Five | Six deriving (Data)
+data EventType = Zero | One | Two | Three | Four | Five | Six | Seven deriving (Data)
 
 instance Binary.Binary Event where
     get = do
@@ -68,6 +70,7 @@ instance Binary.Binary Event where
             Just Four  -> NickChange <$> getText <*> getText
             Just Five  -> return Initialize
             Just Six   -> Invite <$> getText <*> getText
+            Just Seven -> Time <$> Binary.get
             Nothing    -> mzero
 
     put (Shout channel nick message) = do
@@ -96,7 +99,9 @@ instance Binary.Binary Event where
         putEventType Six
         putText nick
         putText channel
-    put (Time _) = return ()
+    put (Time t) = do
+        putEventType Seven
+        Binary.put t
 
 getWord8 :: Binary.Get Word8
 getWord8 = Binary.get
