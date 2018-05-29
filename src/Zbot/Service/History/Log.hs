@@ -8,7 +8,6 @@ import Zbot.Core.Irc
 import Zbot.Service.History.Entry
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.Time
 import Data.Time.Clock (UTCTime)
 import Data.Word (Word16)
 import Foreign.Ptr (Ptr, castPtr, plusPtr)
