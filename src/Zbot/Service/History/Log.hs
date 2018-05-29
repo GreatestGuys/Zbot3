@@ -8,6 +8,7 @@ import Zbot.Core.Irc
 import Zbot.Service.History.Entry
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
+import Data.Time
 import Data.Time.Clock (UTCTime)
 import Data.Word (Word16)
 import Foreign.Ptr (Ptr, castPtr, plusPtr)
@@ -61,6 +62,12 @@ minEntrySize :: Int
 minEntrySize = 13  -- 2 * 2 bytes for size + 8 bytes for time + 1 byte for type.
 
 peekEntry :: (Functor io, MonadIO io) => Int -> Ptr () -> io Entry
+-- Super janky. Since Time entries don't write a byte type they are smaller
+-- than `minEntrySize` and can't be deserialized by eventType. Here we detect them
+-- and create a constant Entry.
+peekEntry 12 _ = return $ Entry t (Time t)
+    where
+        t = UTCTime (ModifiedJulianDay 0) 0
 peekEntry size ptr = Binary.decode <$> liftIO (peekByteString size ptr)
 
 peekByteString :: (Functor io, MonadIO io) => Int -> Ptr () -> io LBS.ByteString
