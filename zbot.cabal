@@ -143,4 +143,5 @@ test-suite zbot-tests
     other-modules:
             Zbot.TestCase
         ,   Zbot.Tests.Dude
+        ,   Zbot.Tests.Replace
         ,   Zbot.Tests.Reputation

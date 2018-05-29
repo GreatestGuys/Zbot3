@@ -37,6 +37,7 @@ instance Binary.Binary Entry where
         _         <- getWord16
         return $ Entry timestamp event
 
+    put (Entry _ (Time _))      = return ()
     put (Entry timestamp event) = do
         let timeBytes = encodedSize timestamp
         let eventBytes = encodedSize event
