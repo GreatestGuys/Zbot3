@@ -11,11 +11,14 @@ module Zbot.Core.Service.IO (
 
 import Zbot.Core.Irc
 import Zbot.Core.Service.Types
+import Zbot.Metrics
 
 import Control.Monad.State
 import Data.Char (isAlphaNum)
 import Data.IORef
+import Data.Ratio ((%))
 import Data.Time.Clock
+import System.Clock (Clock(..), diffTimeSpec, getTime, toNanoSecs)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath ((</>))
 
@@ -25,6 +28,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as Hex
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Prometheus as P
 
 
 data IOCollectiveMeta m = IOCollectiveMeta {
@@ -36,6 +40,9 @@ data IOCollectiveMeta m = IOCollectiveMeta {
 newtype IOCollective m a = MkIOCollective
                            (StateT (IOCollectiveMeta m) m a)
     deriving (Monad, Functor, Applicative, Catch.MonadCatch, Catch.MonadThrow)
+
+instance MonadIO io => P.MonadMonitor (IOCollective io) where
+    doIO = liftIO
 
 instance MonadIO io => MonadIO (IOCollective io) where
     liftIO ioValue = MkIOCollective $ liftIO ioValue
@@ -69,7 +76,17 @@ instance (Applicative io,
                     metaHandlers = metaHandlers meta ++ [handler]
                 ,   metaHelpSpecs = help : metaHelpSpecs meta
                 }
-            makeHandler ioref event = suppressErrors event $ do
+
+            timeHandler handler = do
+                start  <- liftIO $ getTime Monotonic
+                result <- handler
+                end    <- liftIO $ getTime Monotonic
+                let duration = toNanoSecs (end `diffTimeSpec` start) % 1000000000
+                liftIO $ P.withLabel metricHandlerSeconds (name service) $
+                    \c -> void $ P.addCounter c (fromRational duration)
+                return result
+
+            makeHandler ioref event = timeHandler $ suppressErrors event $ do
                 (m, s) <- liftIO $ readIORef ioref
                 let (MkMonadService action) = process service event
                 m' <- execStateT action m
@@ -81,6 +98,7 @@ instance (Applicative io,
             errorHandler event exception = liftIO $ do
                 let marker c = putStrLn $ replicate 80 c
                 let center msg = putStrLn $ T.unpack $ T.center 80 ' ' msg
+                liftIO $ P.withLabel metricErrors (name service) P.incCounter
                 now <- getCurrentTime
                 marker '='
                 center "BEGIN ERROR REPORT"

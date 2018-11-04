@@ -13,6 +13,7 @@ import Zbot.Core.Irc.Engine
 import Zbot.Core.Irc.Protocol
 import Zbot.Core.Service.IO
 import Zbot.Core.Service.Types hiding (Handle)
+import Zbot.Metrics
 
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.State
@@ -24,6 +25,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.IO as T
 import qualified Network.Connection as Network
+import qualified Prometheus as P
 
 
 data NetworkState = NetworkState {
@@ -45,6 +47,7 @@ instance Irc NetworkedBot where
     sendMessage RealTime message = do
         socket <- lift $ gets connection
         liftIO $ Network.connectionPut socket $ T.encodeUtf8 (render message)
+        P.withLabel metricSentMessages "real-time" P.incCounter
         verboseLogging <- lift $ gets verboseLogging
         when verboseLogging $ liftIO $ T.putStr $ T.concat [
                 "[->IRC] "
@@ -55,6 +58,7 @@ instance Irc NetworkedBot where
         messageChannel <- lift $ gets messageChannel
         liftIO $ Chan.writeChan messageChannel message
         verboseLogging <- lift $ gets verboseLogging
+        P.withLabel metricSentMessages "best-effort" P.incCounter
         when verboseLogging $ liftIO $ T.putStr $ T.concat [
                 "[->IRC] "
             ,   "(", T.pack $ show BestEffort, ") "
@@ -105,6 +109,7 @@ processInput = do
     void $ runMaybeT $ do
         rawMessage <- liftIO $ safeHGetLine socket
         message <- MaybeT $ return $ parse $ rawMessage `T.append` "\x0a"
+        P.incCounter metricReceivedMessages
         when verboseLogging $ liftIO $ T.putStr $ T.concat [
                 "[<-IRC] "
             ,   render message
