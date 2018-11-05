@@ -31,6 +31,6 @@ jobs:
           paths:
             - "~/.stack"
       - save-cache:
-          keys: stack-{{checksum "stack.yaml"}}-{{checksum "zbot.cabal"}}
+          key: stack-{{checksum "stack.yaml"}}-{{checksum "zbot.cabal"}}
           paths:
             - ".stack-work"
