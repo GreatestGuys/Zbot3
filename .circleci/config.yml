@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
 
-      - run: sudo apt-get build-dep libcurl4-openssl-dev
+      - run: sudo apt-get update
       - run: sudo apt-get install libcurl4-openssl-dev
 
       - restore-cache:
