@@ -7,6 +7,8 @@ jobs:
     steps:
       - checkout
 
+      - run: apt-get install libcurl4-openssl-dev
+
       - restore-cache:
           keys:
             - stack-{{ checksum "stack.yaml" }}
