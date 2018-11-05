@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
 
-      - run: sudo aptitude install libcurl4-openssl-dev
+      - run: sudo aptitude install -y libcurl4-openssl-dev
 
       - restore-cache:
           keys:
