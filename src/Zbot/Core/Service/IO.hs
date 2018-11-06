@@ -81,9 +81,10 @@ instance (Applicative io,
                 start  <- liftIO $ getTime Monotonic
                 result <- handler
                 end    <- liftIO $ getTime Monotonic
+                --- Convert nano seconds to seconds, % as this is a rational.
                 let duration = toNanoSecs (end `diffTimeSpec` start) % 1000000000
                 liftIO $ P.withLabel metricHandlerSeconds (name service) $
-                    \c -> void $ P.addCounter c (fromRational duration)
+                    \c -> void $ P.observe c (fromRational duration)
                 return result
 
             makeHandler ioref event = timeHandler $ suppressErrors event $ do
