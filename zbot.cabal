@@ -39,6 +39,7 @@ library
             HTTP
         ,   aeson
         ,   attoparsec
+        ,   attoparsec-expr
         ,   base                 >= 4.3 && < 5
         ,   base16-bytestring
         ,   binary
@@ -132,6 +133,7 @@ test-suite zbot-tests
     hs-source-dirs:      test
     main-is:             Main.hs
     build-depends:       base
+                       , attoparsec
                        , HUnit
                        , tasty
                        , tasty-hunit
@@ -144,3 +146,4 @@ test-suite zbot-tests
             Zbot.TestCase
         ,   Zbot.Tests.Dude
         ,   Zbot.Tests.Reputation
+        ,   Zbot.Tests.Roll
