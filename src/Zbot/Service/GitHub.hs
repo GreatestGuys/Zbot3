@@ -27,18 +27,23 @@ import qualified Data.Text as T
 
 type GitHubAccessToken = T.Text
 
-data Project = Zbot | Peefuck | Tnakchat
+data Project = Ircstats | Ggircd | Peefuck | Tnakchat | Zbot
 
 toProject :: T.Text -> Maybe Project
-toProject "zbot"     = Just Zbot
-toProject "peefuck"  = Just Peefuck
-toProject "tnakchat" = Just Tnakchat
-toProject _          = Nothing
+toProject "irc-stats" = Just Ircstats
+toProject "ggircd"    = Just Ggircd
+toProject "peefuck"   = Just Peefuck
+toProject "tnakchat"  = Just Tnakchat
+toProject "zbot"      = Just Zbot
+toProject "zbot3"     = Just Zbot
+toProject _           = Nothing
 
 getURL :: Project -> String
-getURL Zbot     = "GreatestGuys/Zbot3"
+getURL Ircstats = "GreatestGuys/irc-stats"
+getURL Ggircd    = "fimad/ggircd"
 getURL Peefuck  = "fimad/pifuxelck"
 getURL Tnakchat = "fimad/TnakChat"
+getURL Zbot     = "GreatestGuys/Zbot3"
 
 newtype GitHub = MkGitHub {
         unGitHub :: Maybe GitHubAccessToken
@@ -63,9 +68,11 @@ github = Service {
                 ,   "will be taken away if you do."
                 ,   ""
                 ,   "  Supported projects-name's:"
-                ,   "    - zbot"
+                ,   "    - irc-stats"
+                ,   "    - ggircd"
                 ,   "    - peefuck"
                 ,   "    - tnakchat"
+                ,   "    - zbot"
                 ]
         }
     }
