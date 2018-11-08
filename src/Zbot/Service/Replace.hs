@@ -25,14 +25,18 @@ replace history = unitService "Zbot.Service.Replace" handler
             handleMessage (shout channel) maybeLine msg
         handler _                        = return ()
 
-        handleMessage reply (Just (line, nick)) msg
-            | ("s":from:to:"g":_) <- split msg = handleReplace $ replaceAll from to line
-            | ("s":from:to:_)     <- split msg = handleReplace $ replaceOne from to line
+
+        handleMessage reply maybeLine msg =
+            case split msg of
+                ("s":from:to:"g":_) -> handleReplace maybeLine (replaceAll from to)
+                ("s":from:to:_)     -> handleReplace maybeLine (replaceOne from to)
+                _                   -> return ()
             where
-                handleReplace rline = if rline == line
-                    then return ()
-                    else reply $ nick `T.append` ": " `T.append` rline
-        handleMessage _ _ _                    = return ()
+                handleReplace (Just (line, nick)) f = let rline = (f line) in
+                    if rline == line
+                        then return ()
+                        else reply $ nick `T.append` ": " `T.append` rline
+                handleReplace Nothing _ = return ()
 
         findLastMessage channel = foldHistoryBackward history match Nothing
             where
