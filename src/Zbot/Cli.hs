@@ -7,23 +7,30 @@ module Zbot.Cli (
 import Zbot.Core.Bot
 import Zbot.Core.Irc
 
+import Control.Concurrent (forkIO)
+import Control.Monad (when, void)
 import Data.Semigroup ((<>))
+import Network.Wai.Middleware.Prometheus (metricsApp)
 import Options.Applicative
+import Prometheus (register)
+import Prometheus.Metric.GHC (ghcMetrics)
 
 import qualified Data.Text as T
+import qualified Network.Wai.Handler.Warp as Warp
 
 
 data Options = Options {
-            serverFlag   ::  Server
-        ,   portFlag     ::  Port
-        ,   nickFlag     ::  Nick
-        ,   userFlag     ::  User
-        ,   passwordFlag ::  Password
-        ,   channelsFlag ::  [Channel]
-        ,   dataDirFlag  ::  FilePath
-        ,   msgRateFlag  ::  Int
-        ,   verboseFlag  ::  Bool
-        ,   sslFlag      ::  Bool
+            serverFlag      ::  Server
+        ,   portFlag        ::  Port
+        ,   nickFlag        ::  Nick
+        ,   userFlag        ::  User
+        ,   passwordFlag    ::  Password
+        ,   channelsFlag    ::  [Channel]
+        ,   dataDirFlag     ::  FilePath
+        ,   msgRateFlag     ::  Int
+        ,   verboseFlag     ::  Bool
+        ,   sslFlag         ::  Bool
+        ,   metricsPortFlag ::  Int
     }
 
 textOption :: Mod OptionFields String -> Parser T.Text
@@ -68,6 +75,12 @@ optionsParserInfo = info (helper <*> optionsParser) meta
                         <> help "Enable verbose logging.")
             sslFlag <- switch (long "ssl"
                     <> help "Connect to the IRC server over SSL.")
+            metricsPortFlag <- option auto (long "metrics-port"
+                            <> metavar "METRICS-PORT"
+                            <> value 0
+                            <> help (
+                              "If non-zero, the port that the prometheus " ++
+                              "metric endpoint will listen on (default: 0)"))
 
             pure Options{..}
 
@@ -78,7 +91,10 @@ chooseUser nick user | T.null user = nick
                      | otherwise   = user
 
 zbotMain :: NetworkedBot () -> IO ()
-zbotMain init = execParser optionsParserInfo >>= \options ->
+zbotMain init = execParser optionsParserInfo >>= \options -> do
+    when (metricsPortFlag options > 0) $ do
+        register ghcMetrics
+        void $ forkIO $ Warp.run (metricsPortFlag options) metricsApp
     runNetworkedBot
         (serverFlag options)
         (portFlag options)

@@ -44,6 +44,7 @@ library
         ,   base16-bytestring
         ,   binary
         ,   bytestring
+        ,   clock
         ,   connection
         ,   containers
         ,   cryptohash
@@ -59,6 +60,8 @@ library
         ,   mtl
         ,   network
         ,   optparse-applicative
+        ,   prometheus-client    >= 1.0.0
+        ,   prometheus-metrics-ghc >= 1.0.0
         ,   random
         ,   random-fu
         ,   regex-tdfa
@@ -71,6 +74,8 @@ library
         ,   unix
         ,   utf8-string
         ,   uuid
+        ,   wai-middleware-prometheus >= 1.0.0
+        ,   warp
         ,   wreq
 
     exposed-modules:
@@ -88,6 +93,7 @@ library
         ,   Zbot.Extras.Serialize
         ,   Zbot.Extras.Time
         ,   Zbot.Extras.UnitService
+        ,   Zbot.Metrics
         ,   Zbot.Service.Define
         ,   Zbot.Service.Describe
         ,   Zbot.Service.Describe.Default
