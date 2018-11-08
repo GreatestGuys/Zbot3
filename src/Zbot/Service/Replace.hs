@@ -20,17 +20,18 @@ import qualified Data.Text as T
 replace :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 replace history = unitService "Zbot.Service.Replace" handler
     where
-        handler (Shout channel _ msg) = lift $ do
-            let maybeLineF = findLastMessage channel
-            handleMessage (shout channel) maybeLineF msg
-        handler _                        = return ()
+        handler (Shout channel _ msg) = lift
+                                      $ handleMessage (shout channel) channel msg
+        handler _                     = return ()
 
 
-        handleMessage reply maybeLineF msg =
+        handleMessage reply channel msg =
             case split msg of
-                ("s":from:to:"g":_) -> maybeLineF >>= handleReplace (replaceAll from to)
-                ("s":from:to:_)     -> maybeLineF >>= handleReplace (replaceOne from to)
-                _                   -> return ()
+                ("s":from:to:"g":_) ->  findLastMessage channel
+                                    >>= handleReplace (replaceAll from to)
+                ("s":from:to:_)     ->  findLastMessage channel
+                                    >>= handleReplace (replaceOne from to)
+                _                   ->  return ()
             where
                 handleReplace f (Just (line, nick)) = let rline = (f line) in
                     if rline == line
