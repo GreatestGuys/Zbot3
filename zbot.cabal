@@ -51,6 +51,7 @@ library
         ,   curl
         ,   data-default
         ,   directory
+        ,   edit-distance
         ,   exceptions
         ,   filepath
         ,   gitrev
@@ -119,6 +120,7 @@ library
         ,   Zbot.Service.Scrollback
         ,   Zbot.Service.Seen
         ,   Zbot.Service.Summary
+        ,   Zbot.Service.Typo
         ,   Zbot.Service.Uptime
         ,   Zbot.Service.Version
 
@@ -154,3 +156,4 @@ test-suite zbot-tests
         ,   Zbot.Tests.Replace
         ,   Zbot.Tests.Reputation
         ,   Zbot.Tests.Roll
+        ,   Zbot.Tests.Typo
