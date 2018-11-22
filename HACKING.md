@@ -26,6 +26,21 @@ ghci> runMockBot "./data-test/" services events
 [->IRC] (BestEffort) PRIVMSG #channel :zhenya_bot has 14 rep
 ```
 
+For a service with a history dependency:
+
+```
+$ stack ghci
+ghci> :set -XOverloadedStrings
+ghci> :m + Zbot.Core.Irc.Types Zbot.Core.Bot.Mock
+ghci> let historyHandle = history >> registerService
+ghci> let services = do{h <-historyHandle; registerService_ $ replace h;}
+ghci> let events = [Shout "#channel" "nick" "hello warld", Shout "#channel" "nick" "s/warld/world"]
+ghci> runMockBot "./data-test/" services events
+[->IRC] (RealTime) NICK mockBot
+[->IRC] (RealTime) USER mockBot 0 * :Zbot v3
+[->IRC] (BestEffort) PRIVMSG #channel :nick: hello world
+```
+
 ## Running
 
 Running the zbot binary can also be handled by `stack`:
