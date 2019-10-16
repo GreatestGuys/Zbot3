@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -32,10 +31,10 @@ type Gram (n :: Nat) a = Seq.Seq (Token a)
 data Distribution a = Distribution {
         distSize    :: Int64
     ,   distSamples :: Map.Map (Token a) Int64
-    } deriving (Eq, Show, Read, Semigroup)
+    } deriving (Eq, Show, Read)
 
 newtype Model (n :: Nat) a = Model (Map.Map (Gram n a) (Distribution a))
-    deriving (Eq, Read, Semigroup)
+    deriving (Eq, Read)
 
 instance Ord a => Monoid (Distribution a) where
     mempty = Distribution 0 Map.empty

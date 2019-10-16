@@ -15,7 +15,7 @@ import Data.Time
 
 services = fmap replace (history >>= registerService) >>= registerService_
 
-replaceTests = testGroup "Replace Tests" [
+replaceTests = testGroup "History Tests" [
     mockBotTestCase
       "- simple replace"
       services

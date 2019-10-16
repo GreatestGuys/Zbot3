@@ -28,7 +28,6 @@ import Zbot.Service.Roll
 import Zbot.Service.Scrollback
 import Zbot.Service.Seen
 import Zbot.Service.Summary
-import Zbot.Service.Typo
 import Zbot.Service.Uptime
 import Zbot.Service.Version
 
@@ -61,6 +60,5 @@ main = zbotMain $ do
     registerService_ $ scrollback historyHandle
     registerService_ $ seen historyHandle
     registerService_ $ summary historyHandle
-    registerService_ $ typo 5 historyHandle
     uptime historyHandle >>= registerService_
     registerService_ version
