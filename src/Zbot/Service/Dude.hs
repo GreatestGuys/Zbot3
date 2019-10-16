@@ -70,7 +70,7 @@ dudeHandler event
             (DudeState _ m) <- get
             put $ DudeState (Just t) m
 
-        expireDudes :: Bot m => MonadService DudeState m ()
+        expireDudes :: (Bot m) => MonadService DudeState m ()
         expireDudes = do
             (DudeState (Just t) m) <- get
             let dudesPartitioned = M.map (partitionDudes $ isExpired t) m
