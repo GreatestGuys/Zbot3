@@ -13,6 +13,7 @@ import Zbot.Core.Irc
 import Zbot.Core.Service.Types
 import Zbot.Metrics
 
+import Control.Monad.Fail (MonadFail)
 import Control.Monad.State
 import Data.Char (isAlphaNum)
 import Data.IORef
@@ -39,7 +40,13 @@ data IOCollectiveMeta m = IOCollectiveMeta {
 
 newtype IOCollective m a = MkIOCollective
                            (StateT (IOCollectiveMeta m) m a)
-    deriving (Monad, Functor, Applicative, Catch.MonadCatch, Catch.MonadThrow)
+    deriving (
+        Monad,
+        Functor,
+        Applicative,
+        Catch.MonadCatch,
+        Catch.MonadThrow,
+        MonadFail)
 
 instance MonadIO io => P.MonadMonitor (IOCollective io) where
     doIO = liftIO
@@ -53,6 +60,7 @@ instance MonadTrans IOCollective where
 instance (Applicative io,
           Functor io,
           Catch.MonadCatch io,
+          MonadFail io,
           MonadIO io) => Collective (IOCollective io) where
 
     data Handle (IOCollective io) a =
