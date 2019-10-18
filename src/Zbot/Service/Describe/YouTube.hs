@@ -6,68 +6,49 @@ module Zbot.Service.Describe.YouTube (
 import Zbot.Extras.Scrape
 import Zbot.Service.Describe
 
-import Control.Applicative
-import Control.Monad
-import Data.Aeson
 import Text.HTML.Scalpel
 
-import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
+import qualified Data.Text.Read as T
 
 
 describeYouTube :: Describer
 describeYouTube url
-    | isYouTubeLink url = Just $ scrapeURLAsMobile (toEmbedLink url) info
+    | isYouTubeLink url = Just $ scrapeURLAsDesktop url info
     | otherwise         = Nothing
 
 isYouTubeLink :: T.Text -> Bool
 isYouTubeLink = (||) <$> ("youtube.com/watch" `T.isInfixOf`)
                      <*> ("youtu.be/" `T.isInfixOf`)
 
-toEmbedLink :: T.Text -> T.Text
-toEmbedLink url
-    | "youtu.be" `T.isInfixOf` url = T.replace "tu.be" "tube.com/embed" url
-    | "watch?v=" `T.isInfixOf` url = T.replace "watch?v=" "embed/" url
-    | otherwise                    =
-        let (_, videoId) = T.breakOn "v=" url
-        in "http://www.youtube.com/embed/" `T.append` T.drop 2 videoId
-
 info :: Scraper T.Text T.Text
 info = do
-    script <- T.concat <$> texts ((tagSelector "body") // (tagSelector "script"))
-    case decode $ extractJson script of
-        Nothing                                -> empty
-        Just (YouTubeInfo title seconds views) -> return $ T.concat [
-                title
-            ,   " ["
-            ,   "length: ", toTime seconds, ", "
-            ,   "views: ", T.pack $ show views
-            ,   "] "
-            ]
+  title <- attr "content" $ "meta" @: ["property" @= "og:title"]
+  -- The view count is given a div with the class "watch-view-count" and will be
+  -- suffixed with the string " views".
+  views <-  T.takeWhile (/= ' ')
+        <$> text ("div" @: [hasClass "watch-view-count"])
+  duration <-  prettyPrintDuration
+           =<< attr "content" ("meta" @: ["itemprop" @= "duration"])
+  return $ T.concat [
+        title
+    ,   " ["
+    ,   "length: ", duration, ", "
+    ,   "views: ", views
+    ,   "]"
+    ]
 
-extractJson :: T.Text -> LBS.ByteString
-extractJson script = LBS.fromStrict $ T.encodeUtf8 json
-    where
-        jsonPrefix           = "yt.setConfig({'PLAYER_CONFIG': "
-        (_, jsonWithGarbage) = T.breakOn jsonPrefix script
-        jsonWithTrailing     = T.drop (T.length jsonPrefix) jsonWithGarbage
-        (json, _)            = T.breakOn ",'" jsonWithTrailing
-
-
-toTime :: Int -> T.Text
-toTime seconds = T.intercalate ":" [hourText, minuteText, secondText]
-    where
-        secondText = formatText $ seconds `mod` 60
-        minuteText = formatText $ seconds `div` 60 `mod` 60
-        hourText = formatText $ seconds `div` 60 `div` 60
-        formatText = T.justifyRight 2 '0' . T.pack . show
-
-data YouTubeInfo = YouTubeInfo T.Text Int Integer
-
-instance FromJSON YouTubeInfo where
-    parseJSON (Object v) = v .: "args" >>= \args -> YouTubeInfo
-        <$> args .: "title"
-        <*> args .: "length_seconds"
-        <*> args .: "view_count"
-    parseJSON _          = mzero
+-- The duration is given in a weird format. Some examples:
+--    - PT2M30S -> 2:30
+--    - PT65M58S -> 01:05:59
+prettyPrintDuration :: T.Text -> Scraper T.Text T.Text
+prettyPrintDuration duration = do
+  [minutes, seconds] <- return $ T.splitOn "M" $ T.drop 2 duration
+  Right (minutes', _) <- return $ T.decimal minutes
+  Right (seconds', _) <- return $ T.decimal seconds
+  let secondText = formatText seconds'
+  let minuteText = formatText $ minutes' `mod` 60
+  let hourText = formatText $ minutes' `div` 60
+  return $ T.intercalate ":" [hourText, minuteText, secondText]
+  where
+      formatText = T.justifyRight 2 '0' . T.pack . show
