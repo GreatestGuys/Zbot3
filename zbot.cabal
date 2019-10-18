@@ -143,6 +143,8 @@ test-suite zbot-tests
     build-depends:       base
                        , attoparsec
                        , HUnit
+                       , regex-base
+                       , regex-tdfa
                        , tasty
                        , tasty-hunit
                        , temporary
@@ -157,3 +159,4 @@ test-suite zbot-tests
         ,   Zbot.Tests.Reputation
         ,   Zbot.Tests.Roll
         ,   Zbot.Tests.Typo
+        ,   Zbot.Tests.YouTube
