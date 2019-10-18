@@ -3,7 +3,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeOperators #-}
 module Zbot.Service.NGram.Model (
     Model
@@ -32,22 +31,26 @@ type Gram (n :: Nat) a = Seq.Seq (Token a)
 data Distribution a = Distribution {
         distSize    :: Int64
     ,   distSamples :: Map.Map (Token a) Int64
-    } deriving (Eq, Show, Read, Semigroup)
+    } deriving (Eq, Show, Read)
 
 newtype Model (n :: Nat) a = Model (Map.Map (Gram n a) (Distribution a))
-    deriving (Eq, Read, Semigroup)
+    deriving (Eq, Read)
 
-instance Ord a => Monoid (Distribution a) where
-    mempty = Distribution 0 Map.empty
-    mappend (Distribution sizeA distA) (Distribution sizeB distB)
+instance Ord a => Semigroup (Distribution a) where
+    (<>) (Distribution sizeA distA) (Distribution sizeB distB)
         = Distribution {
             distSamples = Map.unionWith (+) distA distB
         ,   distSize    = sizeA + sizeB
         }
 
+instance Ord a => Monoid (Distribution a) where
+    mempty = Distribution 0 Map.empty
+
+instance Ord a => Semigroup (Model n a) where
+    (<>) (Model a) (Model b) = Model $ Map.unionWith (<>) a b
+
 instance Ord a => Monoid (Model n a) where
     mempty = Model Map.empty
-    mappend (Model a) (Model b) = Model $ Map.unionWith (<>) a b
 
 instance Show a => Show (Model n a) where
     show (Model m) = concat $ toList $ Map.mapWithKey showModelEntry m

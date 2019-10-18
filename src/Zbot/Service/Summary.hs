@@ -83,7 +83,7 @@ scrapeArticleSentences url = do
     maybeParagraphs <- scrapeURLAsDesktop url $ texts paragraphScraper
     let maybeSentences = concatMap toSentences <$> maybeParagraphs
     return $ maybe [] (map tokenize) maybeSentences
-    where paragraphScraper = (tagSelector "article") // (tagSelector "p")
+    where paragraphScraper = "article" // "p"
 
 stripNonAscii :: T.Text -> T.Text
 stripNonAscii = T.map (\x -> if ord x >= 32 && ord x < 126 then x else ' ')

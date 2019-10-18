@@ -10,6 +10,7 @@ import Zbot.Extras.UnitService
 
 import Control.Monad.Trans.Class (lift)
 import Data.Char (toLower)
+import Data.Maybe (fromMaybe)
 
 import qualified Data.List as L
 import qualified Data.Map.Strict as M
@@ -37,9 +38,8 @@ handler reply msg
 encodeMorse :: T.Text -> T.Text
 encodeMorse = T.concatMap encode . T.intersperse ' '
     where
-        encode char = case M.lookup (toLower char) toMorseCode of
-            Just code -> code
-            Nothing   -> T.singleton char
+        encode char = fromMaybe (T.singleton char)
+                                (M.lookup (toLower char) toMorseCode)
 
 decodeMorse :: T.Text -> T.Text
 decodeMorse = T.concat . map decode . L.intercalate [" "] . map chars . words

@@ -29,7 +29,7 @@ onCommands :: Bot m
            -> (Event -> MonadService s m ())
 onCommands names handler = onMessage $ \reply msg ->
     let
-        name = F.find ((flip isCommand) msg) names
+        name = F.find (`isCommand` msg) names
     in
         case name of
             (Just name) -> handler reply (toArgs name msg)

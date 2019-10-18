@@ -49,8 +49,8 @@ dudeHandler event
             | isRightDude input = handleDude channel RightDude
             | otherwise         = updateLines channel
             where
-                isLeftDude input  = any (== input) ["o/", "O/"]
-                isRightDude input = any (== input) ["\\o", "\\O"]
+                isLeftDude input  = input `elem` ["o/", "O/"]
+                isRightDude input = input `elem` ["\\o", "\\O"]
 
                 updateLines :: Bot m => Channel -> MonadService DudeState m ()
                 updateLines channel = do
@@ -141,7 +141,7 @@ showDude RightDude = "\\o"
 -- How old these dudes grow
 -- the most ancient of bros.
 ageDudes :: Dudes -> Dudes
-ageDudes dudes = first (fmap ageDude) dudes
+ageDudes = first (fmap ageDude)
     where
         ageDude Dude{..} = Dude{dudeAge=dudeAge+1, ..}
 

@@ -68,18 +68,18 @@ deserializeReputation = fmap MkReputation . deserializeRead
 
 handler :: (MonadIO m, Bot m) => Channel -> Reply m -> T.Text -> MonadService Reputation m ()
 handler channel reply msg
-    | ["+1", nick]                        <- args = plus nick
-    | ["-1", nick]                        <- args = minus nick
-    | [(T.stripPrefix "++" -> Just nick)] <- args = plus nick
-    | [(T.stripSuffix "++" -> Just nick)] <- args = do
-                                                      liftIO $ threadDelay 3000000
-                                                      plus nick
-    | ["!rep", nick ]                     <- args = replyNickRep nick
-    | ["!rep"]                            <- args = replyAllRep
-    | ("!mindmeld":nicks)                 <- args =  mapM_ plus nicks
-                                                  >> modifyRep (+ (length nicks)) "mindmeld"
-    | ["!circlejerk"]                     <- args = circleJerk
-    | otherwise                                   = return ()
+    | ["+1", nick]                      <- args = plus nick
+    | ["-1", nick]                      <- args = minus nick
+    | [T.stripPrefix "++" -> Just nick] <- args = plus nick
+    | [T.stripSuffix "++" -> Just nick] <- args = do
+                                                    liftIO $ threadDelay 3000000
+                                                    plus nick
+    | ["!rep", nick ]                   <- args = replyNickRep nick
+    | ["!rep"]                          <- args = replyAllRep
+    | ("!mindmeld":nicks)               <- args =  mapM_ plus nicks
+                                                >> modifyRep (+ length nicks) "mindmeld"
+    | ["!circlejerk"]                   <- args = circleJerk
+    | otherwise                                 = return ()
     where
         args = T.words msg
 
@@ -89,7 +89,7 @@ handler channel reply msg
             n <- myNick
             allNicks <- filter (/= n) <$> nicks channel
             shout channel "Everyone gets a rep!"
-            return allNicks) >>= (mapM_ (modifyRep (+ 1)))
+            return allNicks) >>= mapM_ (modifyRep (+ 1))
 
         modifyRep f nick = wrapModify (Map.alter f' nick)
             where f' = mfilter (/= 0) . return . f . fromMaybe 0

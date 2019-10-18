@@ -31,8 +31,7 @@ instance MonadState EngineState MockBot where
     put = lift . lift . put
 
 instance Irc MockBot where
-    sendMessage priority message = do
-        lift $ tell $ [Output priority message]
+    sendMessage priority message = lift $ tell [Output priority message]
 
 instance Bot MockBot where
 

@@ -54,8 +54,8 @@ table = [ [prefix "-" Negate]
         , [binary "+" (:+:) E.AssocLeft, binary "-" (:-:) E.AssocLeft]
         ]
     where
-        prefix name f       = E.Prefix (do{ Atto.string name; return f })
-        binary name f assoc = E.Infix (do{ Atto.string name; return f }) assoc
+        prefix name f = E.Prefix (do{ Atto.string name; return f })
+        binary name f = E.Infix (do{ Atto.string name; return f })
 
 constantParser :: Atto.Parser Expr
 constantParser = do
@@ -72,8 +72,8 @@ dieParser = do
 exprParser :: Atto.Parser Expr
 exprParser = E.buildExpressionParser table atomParser
     where
-        atomParser =  (Atto.skipSpace *> ((Atto.skipSpace *> dieParser <* Atto.skipSpace)
-                   <|> (Atto.skipSpace *> constantParser <* Atto.skipSpace)) <* Atto.skipSpace)
+        atomParser =   Atto.skipSpace *> ((Atto.skipSpace *> dieParser <* Atto.skipSpace)
+                   <|> (Atto.skipSpace *> constantParser <* Atto.skipSpace)) <* Atto.skipSpace
 
 eval :: (MonadIO m) => Expr -> m Int
 eval (Const i) = return i
@@ -83,4 +83,4 @@ eval (Die n s) = do
           return $ sum $ take n rolls
 eval (e1 :+: e2) = liftM2 (+) (eval e1) (eval e2)
 eval (e1 :-: e2) = liftM2 (-) (eval e1) (eval e2)
-eval (Negate e)  = fmap negate $ eval e
+eval (Negate e)  = negate <$> eval e

@@ -11,7 +11,6 @@ import Zbot.Service.History
 
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Trans.Class (lift)
-import Data.Monoid
 
 import qualified Data.Text as T
 
@@ -33,7 +32,7 @@ replace history = unitService "Zbot.Service.Replace" handler
                                     >>= handleReplace (replaceOne from to)
                 _                   ->  return ()
             where
-                handleReplace f (Just (line, nick)) = let rline = (f line) in
+                handleReplace f (Just (line, nick)) = let rline = f line in
                     if rline == line
                         then return ()
                         else reply $ nick `T.append` ": " `T.append` rline

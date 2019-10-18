@@ -29,7 +29,6 @@ import Zbot.Core.Irc.Protocol
 import Zbot.Core.Irc.Types
 
 import Control.Monad.State
-import Data.Maybe
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
@@ -43,7 +42,7 @@ myNick = gets engineStateNick
 nicks :: Irc irc => Channel -> irc [Nick]
 nicks channel = do
     maybeChannel <- getMaybeChannel channel
-    return $ fromMaybe [] (channelStateNicks <$> maybeChannel)
+    return $ maybe [] channelStateNicks maybeChannel
 
 -- | A list of all channels that are currently joined.
 channels :: Irc irc => irc [Channel]
@@ -111,7 +110,7 @@ partChannel channel = do
 channelMode :: Irc irc => Channel -> irc [ChannelMode]
 channelMode channel = do
     maybeChannel <- getMaybeChannel channel
-    return $ fromMaybe [] (channelStateMode <$> maybeChannel)
+    return $ maybe [] channelStateMode maybeChannel
 
 -- | Add a list of modes to a channel.
 addChannelMode :: Irc irc => Channel -> [ChannelMode] -> irc ()
@@ -139,7 +138,7 @@ sendModeMessage channel diff = sendMessage BestEffort modeMessage
 
         renderMode prefix (Op nick)    = [prefix `T.append` "o", nick]
         renderMode prefix (Voice nick) = [prefix `T.append` "v", nick]
-        renderMode prefix (Secret)     = [prefix `T.append` "s"]
+        renderMode prefix Secret       = [prefix `T.append` "s"]
 
 getMaybeChannel :: Irc irc => Channel -> irc (Maybe ChannelState)
 getMaybeChannel channel = gets (Map.lookup channel . engineStateChannels)
