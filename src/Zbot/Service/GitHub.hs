@@ -82,10 +82,10 @@ handler :: (Catch.MonadCatch m, MonadIO m, Bot m)
         -> T.Text
         -> MonadService GitHub m ()
 handler reply msg
-        | ("!report":project:issue)    <- args = githubHandler (report project) reply
-                                               $ T.intercalate " " issue
-        | ("!close":project:number:[]) <- args = githubHandler (close project) reply number
-        | otherwise                            = return ()
+        | ("!report":project:issue)   <- args = githubHandler (report project) reply
+                                              $ T.intercalate " " issue
+        | ["!close", project, number] <- args = githubHandler (close project) reply number
+        | otherwise                           = return ()
         where
             report p = maybe (emptyGitHubAction p) reportIssue (toProject p)
             close  p = maybe (emptyGitHubAction p) closeIssue (toProject p)
@@ -106,7 +106,7 @@ reportIssue project reply issue accessToken = do
             payload = object ["title" .= issue]
 
             issueEndpoint =  "https://api.github.com/repos/"
-                          ++ (getURL project)
+                          ++ getURL project
                           ++ "/issues"
 
             -- The result is a JSON object, one of the fields is "url" which is the
@@ -126,7 +126,7 @@ closeIssue project reply number accessToken = do
             payload = object ["state" .= ("closed" :: T.Text)]
 
             issueEndpoint =  "https://api.github.com/repos/"
-                          ++ (getURL project)
+                          ++ getURL project
                           ++ "/issues/"
                           ++ T.unpack number
 
@@ -145,7 +145,7 @@ githubHandler h reply issue =   gets unGitHub
     where
         reportNotConfigured = reply "GitHub service is not configured."
 
-        reportIssueSafe = flip Catch.catch errorHandler . (h reply issue)
+        reportIssueSafe = flip Catch.catch errorHandler . h reply issue
 
         errorMsg = "Encountered an error while accessing GitHub api."
 

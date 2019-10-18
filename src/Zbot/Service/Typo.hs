@@ -48,7 +48,7 @@ typo maxDistance history = unitService "Zbot.Service.Typo" handler
                 match _ (Shout channel' nick' msg) Nothing
                     |  channel == channel'
                     && nick == nick'
-                    && (not $ "*" `T.isSuffixOf` msg)
+                    && not ("*" `T.isSuffixOf` msg)
                     = Just msg
                 match _ _ acc = acc
 
@@ -60,7 +60,7 @@ typo maxDistance history = unitService "Zbot.Service.Typo" handler
             where
                 editDistance = levenshteinDistance defaultEditCosts
                              $ T.unpack correction
-                compareWords w1 w2 = (editDistance w1) `compare` (editDistance w2)
+                compareWords w1 w2 = editDistance w1 `compare` editDistance w2
                 bestMatch = minimumBy compareWords
                           . map T.unpack
                           $ T.words lastMessage

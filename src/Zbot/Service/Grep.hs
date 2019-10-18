@@ -94,7 +94,7 @@ mkGrepParser c = do
                <> metavar "CHANNEL"
                <> value (T.unpack c)
                <> help "The channel to match against")
-    optQuery <-  (T.intercalate " ")
+    optQuery <-  T.intercalate " "
              <$> (some . textArgument $ metavar "QUERY")
 
     pure GrepOptions{..}
@@ -114,7 +114,7 @@ data GrepResult = GrepResult {
 parseGrepOptions :: Parser GrepOptions -> [T.Text] -> Maybe GrepOptions
 parseGrepOptions parser = getParseResult
                         . execParserPure defaultPrefs (info parser fullDesc)
-                        . fmap (T.unpack)
+                        . fmap T.unpack
 
 historyToList :: UTCTime -> Event -> [(UTCTime, Event)] -> [(UTCTime, Event)]
 historyToList time ev@Shout{} acc = (time, ev) : acc
