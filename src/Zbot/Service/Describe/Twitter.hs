@@ -24,11 +24,11 @@ describeTwitter url
 tweet :: Scraper T.Text T.Text
 tweet = do
     status   <-  extractStatus
-             <$> attr "content" ((TagString "meta") @: [(AttributeString "property") @= "og:description"])
+             <$> attr "content" (TagString "meta" @: [AttributeString "property" @= "og:description"])
     userName <-  extractUserName
-             <$> attr "content" ((TagString "meta") @: [(AttributeString "property") @= "og:url"])
+             <$> attr "content" (TagString "meta" @: [AttributeString "property" @= "og:url"])
     fullName <-  extractFullName
-             <$> attr "content" ((TagString "meta") @: [(AttributeString "property") @= "og:title"])
+             <$> attr "content" (TagString "meta" @: [AttributeString "property" @= "og:title"])
     return $ T.concat [userName, T.pack " (", fullName, T.pack ") ", status]
 
 dropFromEnd :: Int -> T.Text -> T.Text

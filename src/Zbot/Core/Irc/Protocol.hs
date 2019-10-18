@@ -69,7 +69,7 @@ instance Parse Message where
     parse input = toMessage
                 $ Atto.parse (parseMessage <* Atto.endOfInput) input
         where
-            toMessage (Atto.Fail{})          = Nothing
+            toMessage Atto.Fail{}            = Nothing
             toMessage (Atto.Partial partial) = toMessage $ partial T.empty
             toMessage (Atto.Done _ result)   = Just result
 

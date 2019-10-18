@@ -51,7 +51,7 @@ scrapeURLAsUA userAgent textUrl scraper = do
                           $ HTTP.responseHeaders res'
         -- For all non-text requests return an empty body.
         if isTextContent
-          then return $ res'
+          then return res'
           else return $ res' {
               HTTP.responseBody = return BS.empty
             }

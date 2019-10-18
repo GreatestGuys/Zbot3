@@ -34,7 +34,7 @@ replaceTests = testGroup "Replace Tests" [
       "- handles Time events"
       services
       [ Shout "#channel" "nick" "hello world"
-      , Time (ts !! 0)
+      , Time (head ts)
       , Shout "#channel" "nick" "s/hello/goodbye"]
       [replyOutput "#channel" "nick: goodbye world"]
   ]

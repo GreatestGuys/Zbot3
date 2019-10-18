@@ -11,7 +11,7 @@ import Zbot.Extras.Command
 import Zbot.Extras.UnitService
 
 import Control.Concurrent (threadDelay)
-import Control.Monad (liftM, replicateM)
+import Control.Monad (replicateM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
 import Data.List (foldl1')
@@ -39,9 +39,7 @@ handleCommand :: (MonadIO m, Bot m)
               => Reply m -> T.Text -> MonadService () m ()
 handleCommand reply args = lift $ makeGoblin reply (parse args defaultOptions)
 
-data Options = Options {
-               optLevel :: Int
-             }
+newtype Options = Options {optLevel :: Int}
 
 defaultOptions = Options { optLevel = 1 }
 
@@ -236,7 +234,7 @@ levelUp goblin@Goblin{..} = do
 buySkills :: MonadIO m => Int -> [(Skill, Int)] -> m [(Skill, Int)]
 buySkills ranks skills | ranks <= 0 = return skills
                        | otherwise  = do
-    index <- (\x -> x - 1) <$> (roll $ length skills)
+    index <- (\x -> x - 1) <$> roll (length skills)
     let (skill, rank) = skills !! index
     buySkills (ranks - 1) $ concat [
                                      take index skills
@@ -255,8 +253,7 @@ randList l = do
 
 
 d :: MonadIO m => Int -> Int -> m Int
-d n sides = liftM (foldl1' (+))
-          $ replicateM n (roll sides)
+d n sides = foldl1' (+) <$> replicateM n (roll sides)
 
 roll :: MonadIO m => Int -> m Int
 roll sides = do

@@ -37,5 +37,4 @@ rollTests = testGroup "Roll Tests" [
   where
     exprTest desc exprString expr =
       testCase desc $
-        (parseOnly exprParser exprString) @?=
-        (Right $ expr)
+        parseOnly exprParser exprString @?= Right expr
