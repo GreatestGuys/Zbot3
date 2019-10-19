@@ -40,7 +40,7 @@ grep historyHandle =
     }
     where
         handler channel reply msg
-            | ("!grep":rest) <- args = grepCommand channel reply rest
+            | ("!grep":rest) <- args = grepCommand channel (reply Direct) rest
             | otherwise              = return ()
             where
                 args = T.words msg

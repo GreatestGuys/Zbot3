@@ -150,6 +150,7 @@ test-suite zbot-tests
                        , temporary
                        , text
                        , time
+                       , transformers
                        , zbot
 
     other-modules:
@@ -157,6 +158,7 @@ test-suite zbot-tests
         ,   Zbot.Tests.Dude
         ,   Zbot.Tests.Onion
         ,   Zbot.Tests.Replace
+        ,   Zbot.Tests.Reply
         ,   Zbot.Tests.Reputation
         ,   Zbot.Tests.Roll
         ,   Zbot.Tests.Typo

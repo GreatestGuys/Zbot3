@@ -103,7 +103,7 @@ handler channel reply msg
             mapM_ (uncurry replyRep) sorted
 
         replyRep nick rep = lift
-                          $ reply
+                          $ reply Direct
                           $ T.concat [nick, " has ", showText rep, " rep"]
 
 wrapModify :: Bot m

@@ -32,7 +32,7 @@ define = (unitService "Zbot.Service.Define" (onCommand "!define" lookupTerm)) {
 lookupTerm :: (MonadIO m, Bot m) => Reply m -> T.Text -> MonadService s m ()
 lookupTerm reply term = do
     maybeDef <- liftIO $ tryIOMaybes [scrapeTerm term, scrapeRandom term]
-    lift $ maybe (return ()) reply maybeDef
+    lift $ maybe (return ()) (reply Direct) maybeDef
 
 tryIOMaybes :: [IO (Maybe a)] -> IO (Maybe a)
 tryIOMaybes []     = return Nothing

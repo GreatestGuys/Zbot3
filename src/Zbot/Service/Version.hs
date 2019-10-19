@@ -21,7 +21,7 @@ version = unitService "Zbot.Service.Version" (onCommand "!version" handler)
 
 handler :: Bot m => Reply m -> T.Text -> MonadService () m ()
 handler reply _ = lift
-                . reply
+                . reply Direct
                 $ T.concat [
                     $(gitCommitDate)
                 ,   " ("

@@ -1,5 +1,7 @@
 module Zbot.Extras.Regex (
-    extractRegex
+    Reply
+,   ReplyMode(..)
+,   extractRegex
 ,   onRegex
 )   where
 

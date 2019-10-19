@@ -57,9 +57,9 @@ performSummary reply url = lift $ do
     maybeModel <- liftIO $ modelFromUrl url
     maybe replyError replyUttrance maybeModel
     where
-        replyError = reply "That doesn't look like an article to me."
+        replyError = reply Direct "That doesn't look like an article to me."
         replyUttrance model =   liftIO (sample $ detokenize <$> generate model)
-                            >>= reply
+                            >>= reply Direct
 
 lastSpokenUrl :: (MonadIO m, Bot m)
               => Handle m History -> MonadService () m T.Text

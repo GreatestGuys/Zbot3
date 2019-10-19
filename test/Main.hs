@@ -4,6 +4,7 @@ module Main where
 import Zbot.Tests.Dude
 import Zbot.Tests.Onion
 import Zbot.Tests.Replace
+import Zbot.Tests.Reply
 import Zbot.Tests.Reputation
 import Zbot.Tests.Roll
 import Zbot.Tests.Typo
@@ -17,6 +18,7 @@ main = defaultMain $ testGroup "ZBot Tests" [
     dudeTests
   , onionTests
   , replaceTests
+  , replyTests
   , reputationTests
   , rollTests
   , typoTests

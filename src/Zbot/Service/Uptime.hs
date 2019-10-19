@@ -39,12 +39,12 @@ uptimeHandler history bootTime reply msg
         botUptime = do
             now <- liftIO getCurrentTime
             let up = diffUTCTime now bootTime
-            lift $ reply $ prettyDiffTime up
+            lift $ reply Direct $ prettyDiffTime up
 
         nickUptime nick = lift $ do
             lastTime <- findJoinTime nick
             now      <- liftIO getCurrentTime
-            reply $ maybe notFound (found now) lastTime
+            reply Direct $ maybe notFound (found now) lastTime
             where
                 notFound = T.concat ["There are no records of ", nick, "."]
 

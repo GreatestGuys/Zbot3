@@ -94,12 +94,13 @@ handler reply msg
 type GitHubAction = forall m. (MonadIO m) => Reply m -> T.Text -> GitHubAccessToken -> m ()
 
 emptyGitHubAction :: T.Text -> GitHubAction
-emptyGitHubAction project reply _ _ = reply $ "No project alias: " `T.append` project
+emptyGitHubAction project reply _ _ = reply Direct
+                                    $ "No project alias: " `T.append` project
 
 reportIssue :: Project -> GitHubAction
 reportIssue project reply issue accessToken = do
         result <- liftIO $ postWith options issueEndpoint payload
-        reply $ toIssueUrl result
+        reply Direct $ toIssueUrl result
         where
             options = defaults & param "access_token" .~ [accessToken]
 
@@ -119,7 +120,7 @@ reportIssue project reply issue accessToken = do
 closeIssue :: Project -> GitHubAction
 closeIssue project reply number accessToken = do
         result <- liftIO $ postWith options issueEndpoint payload
-        reply $ toIssueUrl result
+        reply Direct $ toIssueUrl result
         where
             options = defaults & param "access_token" .~ [accessToken]
 
@@ -143,10 +144,10 @@ githubHandler :: (Catch.MonadCatch m, MonadIO m, Bot m)
 githubHandler h reply issue =   gets unGitHub
                             >>= lift . maybe reportNotConfigured reportIssueSafe
     where
-        reportNotConfigured = reply "GitHub service is not configured."
+        reportNotConfigured = reply Direct "GitHub service is not configured."
 
         reportIssueSafe = flip Catch.catch errorHandler . h reply issue
 
         errorMsg = "Encountered an error while accessing GitHub api."
 
-        errorHandler (_ :: Catch.SomeException) = reply errorMsg
+        errorHandler (_ :: Catch.SomeException) = reply Direct errorMsg

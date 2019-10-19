@@ -33,5 +33,5 @@ describe describers = unitService "Zbot.Service.Describe" handler
                 maybeDescription :: Maybe (IO (Maybe T.Text))
                 maybeDescription = msum $ map ($ link) describers
 
-                replyMaybe (Just description) = lift $ reply description
+                replyMaybe (Just description) = lift $ reply Direct description
                 replyMaybe _                  = return ()

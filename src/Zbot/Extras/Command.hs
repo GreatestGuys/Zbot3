@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Zbot.Extras.Command (
     Reply
+,   ReplyMode(..)
 ,   onCommand
 ,   onCommands
 )   where
