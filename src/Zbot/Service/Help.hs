@@ -35,13 +35,15 @@ handler reply arg
         Just helpMsg <- lookupHelpSpec "!help"
         replyHelpMsg helpMsg
         services <- servicesWithHelp
-        mapM_ (reply Direct) ["", "Services with help pages:", ""]
+        mapM_ (reply ForceWhisper) ["", "Services with help pages:", ""]
         mapM_ replyServiceAndSpec services
     | otherwise  = lift $ lookupHelpSpec arg >>= maybe replyNone replyHelpMsg
     where
-        replyHelpMsg = mapM_ (reply Direct) . helpMessage
+        replyHelpMsg = (reply ShoutOrDrop "Check your DM's ;)" >>)
+                     . mapM_ (reply ForceWhisper)
+                     . helpMessage
         replyNone = reply Direct "There is no such help page."
-        replyServiceAndSpec (service, spec) = reply Direct $ T.concat [
+        replyServiceAndSpec (service, spec) = reply ForceWhisper $ T.concat [
                 "    ", service, ": ", T.intercalate ", " (helpAliases spec)
             ]
 
