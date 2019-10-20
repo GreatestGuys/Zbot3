@@ -2,6 +2,7 @@
 module Main where
 
 import Zbot.Tests.Dude
+import Zbot.Tests.Grep
 import Zbot.Tests.Help
 import Zbot.Tests.Onion
 import Zbot.Tests.Replace
@@ -17,6 +18,7 @@ import Test.Tasty
 main :: IO ()
 main = defaultMain $ testGroup "ZBot Tests" [
     dudeTests
+  , grepTests
   , helpTests
   , onionTests
   , replaceTests

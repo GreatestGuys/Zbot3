@@ -29,7 +29,7 @@ reputation = Service {
     ,   serialize   = serializeReputation
     ,   deserialize = deserializeReputation
     ,   name        = "Zbot.Service.Reputation"
-    ,   process     = onMessageWithChannel handler
+    ,   process     = onMessage handler
     ,   helpSpec    = Just HelpSpec {
             helpAliases      = ["!rep", "+1", "-1", "!circlejerk"]
         ,   helpMessage      = [
@@ -67,8 +67,8 @@ deserializeReputation :: BS.ByteString -> Maybe Reputation
 deserializeReputation = fmap MkReputation . deserializeRead
 
 handler :: (MonadIO m, Bot m)
-        => Channel -> MessageContext m -> T.Text -> MonadService Reputation m ()
-handler channel ctx msg
+        => MessageContext m -> T.Text -> MonadService Reputation m ()
+handler ctx@MessageContext{source = ShoutSource channel _} msg
     | ["+1", nick]                      <- args = plus nick
     | ["-1", nick]                      <- args = minus nick
     | [T.stripPrefix "++" -> Just nick] <- args = plus nick
@@ -106,6 +106,7 @@ handler channel ctx msg
         replyRep nick rep = lift
                           $ reply ctx
                           $ T.concat [nick, " has ", showText rep, " rep"]
+handler _ _ = return ()
 
 wrapModify :: Bot m
            => (Map.Map Nick Int -> Map.Map Nick Int)

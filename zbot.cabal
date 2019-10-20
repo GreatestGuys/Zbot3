@@ -156,6 +156,7 @@ test-suite zbot-tests
     other-modules:
             Zbot.TestCase
         ,   Zbot.Tests.Dude
+        ,   Zbot.Tests.Grep
         ,   Zbot.Tests.Help
         ,   Zbot.Tests.Onion
         ,   Zbot.Tests.Replace
