@@ -5,6 +5,7 @@ module Zbot.Service.Describe (
 ) where
 
 import Zbot.Core.Bot
+import Zbot.Core.Irc
 import Zbot.Core.Service
 import Zbot.Extras.Regex
 import Zbot.Extras.UnitService
@@ -21,11 +22,15 @@ import qualified Data.Text as T
 type Describer = T.Text -> Maybe (IO (Maybe T.Text))
 
 describe :: (MonadIO m, Bot m) => [Describer] -> Service m ()
-describe describers = unitService "Zbot.Service.Describe" handler
+describe describers = unitService "Zbot.Service.Describe" handler'
     where
         linkPattern = "https?://[^ #]*"
 
         handler = onRegex linkPattern describeLinks
+
+        handler' (Shout _ _ msg) | "!" `T.isPrefixOf` msg = return ()
+        handler' (Whisper _ msg) | "!" `T.isPrefixOf` msg = return ()
+        handler' event                                    = handler event
 
         describeLinks ctx link =
             maybe (return ()) ((replyMaybe =<<) . liftIO) maybeDescription
