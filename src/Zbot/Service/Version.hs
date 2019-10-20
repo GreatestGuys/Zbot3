@@ -19,9 +19,9 @@ import qualified Data.Text as T
 version :: Bot m => Service m ()
 version = unitService "Zbot.Service.Version" (onCommand "!version" handler)
 
-handler :: Bot m => Reply m -> T.Text -> MonadService () m ()
-handler reply _ = lift
-                . reply Direct
+handler :: Bot m => MessageContext m -> T.Text -> MonadService () m ()
+handler ctx _ = lift
+                . reply ctx
                 $ T.concat [
                     $(gitCommitDate)
                 ,   " ("

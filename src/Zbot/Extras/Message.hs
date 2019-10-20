@@ -1,6 +1,7 @@
 module Zbot.Extras.Message (
     Reply
-,   ReplyMode(..)
+,   MessageContext(..)
+,   MessageSource(..)
 ,   onMessage
 ,   onMessageWithChannel
 )   where
@@ -14,29 +15,45 @@ import qualified Data.Text as T
 
 -- | A function that can be used to send a message to either the channel or the
 -- nick who initiated the command.
-type Reply m = ReplyMode -> T.Text -> m ()
+type Reply m = T.Text -> m ()
 
-data ReplyMode = Direct | ForceWhisper | ShoutOrDrop
+data MessageSource = ShoutSource Channel Nick
+                   | WhisperSource Nick
+
+data MessageContext m = MessageContext {
+  -- | Reply to the message via the same mechanism that it was received.
+  reply           :: Reply m
+  -- | Reply to the message by shouting on a channel. If the message was
+  -- received in a PM, the reply is dropped.
+, shoutBackOrDrop :: Reply m
+  -- | Reply to the message by whispering to the nick that sent the message.
+, whisperBack     :: Reply m
+  -- | The source of the message, either the channel the message came in on, or
+  -- the nick of the user that whispered it.
+, source :: MessageSource
+}
 
 onMessage :: Bot m
-          => (Reply m -> T.Text -> MonadService s m ())
+          => (MessageContext m -> T.Text -> MonadService s m ())
           -> Event -> MonadService s m ()
-onMessage handler (Shout channel nick msg) =
-  let reply Direct       = shout channel
-      reply ShoutOrDrop  = shout channel
-      reply ForceWhisper = whisper nick
-  in handler reply msg
-onMessage handler (Whisper nick msg) =
-  let reply Direct       = whisper nick
-      reply ShoutOrDrop  = \_ -> return ()
-      reply ForceWhisper = whisper nick
-  in handler reply msg
-onMessage _       _                  = return ()
+onMessage handler (Shout channel nick msg) = flip handler msg MessageContext {
+    reply           = shout channel
+  , shoutBackOrDrop = shout channel
+  , whisperBack     = whisper nick
+  , source          = ShoutSource channel nick
+  }
+onMessage handler (Whisper nick msg)       = flip handler msg MessageContext {
+    reply           = whisper nick
+  , shoutBackOrDrop = \_ -> return ()
+  , whisperBack     = whisper nick
+  , source          = WhisperSource nick
+  }
+onMessage _       _                        = return ()
 
 -- | A utility function for onMessage callers that want access to the their
 -- current channel.
 onMessageWithChannel :: Bot m
-                     => (Channel -> Reply m -> T.Text -> MonadService s m ())
+                     => (Channel -> MessageContext m -> T.Text -> MonadService s m ())
                      -> Event -> MonadService s m ()
 onMessageWithChannel handler e@(Shout channel _ _) = onMessage (handler channel) e
 onMessageWithChannel _       _                     = return ()

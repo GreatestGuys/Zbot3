@@ -29,8 +29,8 @@ roll :: (MonadIO m, Bot m) => Service m ()
 roll = unitService "Zbot.Service.Roll" (onCommand "!roll" handleCommand)
 
 handleCommand :: (MonadIO m, Bot m)
-              => Reply m -> T.Text -> MonadService () m ()
-handleCommand reply arg = lift $ rollDice (reply Direct) arg
+              => MessageContext m -> T.Text -> MonadService () m ()
+handleCommand ctx arg = lift $ rollDice (reply ctx) arg
 
 rollDice :: (MonadIO m, Bot m) => (T.Text -> m ()) -> T.Text -> m ()
 rollDice reply arg | all isDigit (T.unpack arg)

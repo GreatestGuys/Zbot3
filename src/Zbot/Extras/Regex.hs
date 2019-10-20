@@ -1,6 +1,7 @@
 module Zbot.Extras.Regex (
     Reply
-,   ReplyMode(..)
+,   MessageContext(..)
+,   MessageSource(..)
 ,   extractRegex
 ,   onRegex
 )   where
@@ -22,7 +23,7 @@ type Pattern = T.Text
 
 onRegex :: Bot m
         => Pattern
-        -> (Reply m -> T.Text -> MonadService s m ())
+        -> (MessageContext m -> T.Text -> MonadService s m ())
         -> Event -> MonadService s m ()
 onRegex pattern action =
         onMessage $ \reply -> mapM_ (action reply) . concat . match regex

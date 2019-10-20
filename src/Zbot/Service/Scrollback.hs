@@ -68,8 +68,8 @@ handleMsg hist nick initialOpts query
     | opts <- parse (T.splitOn " " query) initialOpts
     , Options (Just channel)
               (Just messages) <- opts = getScroll hist reply channel messages
-    | otherwise                       = lift $ reply Direct "See !help !scrollback"
-    where reply _ = whisper nick
+    | otherwise                       = lift $ reply "See !help !scrollback"
+    where reply = whisper nick
 
 parse :: [T.Text] -> Options -> Options
 parse []   opts = opts
@@ -93,7 +93,7 @@ getScroll :: (MonadIO m, Bot m)
           -> MonadService () m ()
 getScroll hist reply channel m =   lift
                                $   foldHistoryBackward hist search (m, [])
-                               >>= mapM_ (reply Direct) . snd
+                               >>= mapM_ reply . snd
     where
         search :: UTCTime -> Event -> (Int, [T.Text]) -> (Int, [T.Text])
         search time (Shout ch nick msg) (n, xs)

@@ -2,7 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Zbot.Extras.Command (
     Reply
-,   ReplyMode(..)
+,   MessageContext(..)
+,   MessageSource(..)
 ,   onCommand
 ,   onCommands
 )   where
@@ -18,7 +19,7 @@ import qualified Data.Text as T
 
 onCommand :: Bot m
           => T.Text
-          -> (Reply m -> T.Text -> MonadService s m ())
+          -> (MessageContext m -> T.Text -> MonadService s m ())
           -> (Event -> MonadService s m ())
 onCommand name handler = onMessage $ \reply msg -> if
     | isCommand name msg -> handler reply (toArgs name msg)
@@ -26,7 +27,7 @@ onCommand name handler = onMessage $ \reply msg -> if
 
 onCommands :: Bot m
            => [T.Text]
-           -> (Reply m -> T.Text -> MonadService s m ())
+           -> (MessageContext m -> T.Text -> MonadService s m ())
            -> (Event -> MonadService s m ())
 onCommands names handler = onMessage $ \reply msg ->
     let

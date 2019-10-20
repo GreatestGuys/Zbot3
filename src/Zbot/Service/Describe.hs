@@ -27,11 +27,11 @@ describe describers = unitService "Zbot.Service.Describe" handler
 
         handler = onRegex linkPattern describeLinks
 
-        describeLinks reply link =
+        describeLinks ctx link =
             maybe (return ()) ((replyMaybe =<<) . liftIO) maybeDescription
             where
                 maybeDescription :: Maybe (IO (Maybe T.Text))
                 maybeDescription = msum $ map ($ link) describers
 
-                replyMaybe (Just description) = lift $ reply Direct description
+                replyMaybe (Just description) = lift $ reply ctx description
                 replyMaybe _                  = return ()

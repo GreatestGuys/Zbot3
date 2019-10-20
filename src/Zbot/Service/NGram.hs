@@ -36,11 +36,11 @@ ngram history = do
         }
 
 handler :: (MonadIO m, Bot m)
-        => Map.Map Nick NGramModel -> Reply m -> T.Text -> MonadService () m ()
-handler modelMap reply args | [] <- models = lift
-                                           $ reply Direct "usage: !be nick1 nick2 ..."
+        => Map.Map Nick NGramModel -> MessageContext m -> T.Text -> MonadService () m ()
+handler modelMap ctx args | [] <- models = lift
+                                           $ reply ctx "usage: !be nick1 nick2 ..."
                             | otherwise    =   liftIO (sample utterance)
-                                           >>= lift . reply Direct
+                                           >>= lift . reply ctx
     where
         nicks  = T.words args
         models = mapMaybe (`Map.lookup` modelMap) nicks

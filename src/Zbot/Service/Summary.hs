@@ -46,10 +46,10 @@ summary history = (unitService "Zbot.Service.Summary" handler) {
     where handler = onCommand "!summary" (handleCommand history)
 
 handleCommand :: (MonadIO m, Bot m)
-              => Handle m History -> Reply m -> T.Text -> MonadService () m ()
-handleCommand history reply url
-     | T.null url = lastSpokenUrl history >>= performSummary reply
-     | otherwise  = performSummary reply url
+              => Handle m History -> MessageContext m -> T.Text -> MonadService () m ()
+handleCommand history ctx url
+     | T.null url = lastSpokenUrl history >>= performSummary (reply ctx)
+     | otherwise  = performSummary (reply ctx) url
 
 performSummary :: (MonadIO m, Bot m)
                => Reply m -> T.Text -> MonadService () m ()
@@ -57,9 +57,9 @@ performSummary reply url = lift $ do
     maybeModel <- liftIO $ modelFromUrl url
     maybe replyError replyUttrance maybeModel
     where
-        replyError = reply Direct "That doesn't look like an article to me."
+        replyError = reply "That doesn't look like an article to me."
         replyUttrance model =   liftIO (sample $ detokenize <$> generate model)
-                            >>= reply Direct
+                            >>= reply
 
 lastSpokenUrl :: (MonadIO m, Bot m)
               => Handle m History -> MonadService () m T.Text

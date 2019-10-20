@@ -16,41 +16,41 @@ import Data.Time
 replyTests = testGroup "OnMessage Reply Tests" [
     mockBotTestCase
       "Reply Direct on channel"
-      (registerService_ $ replyService Direct)
+      (registerService_ $ replyService reply)
       [Shout "#channel" "nick" "message"]
       [replyOutput "#channel" "message"],
 
     mockBotTestCase
       "Reply Direct on PM"
-      (registerService_ $ replyService Direct)
+      (registerService_ $ replyService reply)
       [Whisper "nick" "message"]
       [replyOutput "nick" "message"],
 
     mockBotTestCase
       "Reply ForceWhisper on channel"
-      (registerService_ $ replyService ForceWhisper)
+      (registerService_ $ replyService whisperBack)
       [Shout "#channel" "nick" "message"]
       [replyOutput "nick" "message"],
 
     mockBotTestCase
       "Reply ForceWhisper on PM"
-      (registerService_ $ replyService ForceWhisper)
+      (registerService_ $ replyService whisperBack)
       [Whisper "nick" "message"]
       [replyOutput "nick" "message"],
 
     mockBotTestCase
       "Reply ShoutOrDrop on channel"
-      (registerService_ $ replyService ShoutOrDrop)
+      (registerService_ $ replyService shoutBackOrDrop)
       [Shout "#channel" "nick" "message"]
       [replyOutput "#channel" "message"],
 
     mockBotTestCase
       "Reply ForceWhisper on PM"
-      (registerService_ $ replyService ShoutOrDrop)
+      (registerService_ $ replyService shoutBackOrDrop)
       [Whisper "nick" "message"]
       []
   ]
   where
-      replyService :: Bot m => ReplyMode -> Service m ()
+      replyService :: Bot m => (MessageContext m -> Reply m) -> Service m ()
       replyService mode = unitService "test service"
-                        $ onMessage (\reply msg -> lift $ reply mode msg)
+                        $ onMessage (\ctx msg -> lift $ mode ctx msg)
