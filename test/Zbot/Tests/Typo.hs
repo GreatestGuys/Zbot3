@@ -49,4 +49,11 @@ typoTests = testGroup "Typo Tests" [
       [ Shout "#channel" "nick" "tnak"
       , Shout "#channel" "nick" "Rat King*"]
       []
+
+  , mockBotTestCase
+      "- don't correct messages like '*vomit*'"
+      services
+      [ Shout "#channel" "nick" "vmit"
+      , Shout "#channel" "nick" "*vomit*"]
+      []
   ]
