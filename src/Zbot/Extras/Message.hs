@@ -3,7 +3,6 @@ module Zbot.Extras.Message (
 ,   MessageContext(..)
 ,   MessageSource(..)
 ,   onMessage
-,   onMessageWithChannel
 )   where
 
 import Zbot.Core.Bot
@@ -36,24 +35,16 @@ data MessageContext m = MessageContext {
 onMessage :: Bot m
           => (MessageContext m -> T.Text -> MonadService s m ())
           -> Event -> MonadService s m ()
-onMessage handler (Shout channel nick msg) = flip handler msg MessageContext {
+onMessage handler (Shout channel nick msg) = handler MessageContext {
     reply           = shout channel
   , shoutBackOrDrop = shout channel
   , whisperBack     = whisper nick
   , source          = ShoutSource channel nick
-  }
-onMessage handler (Whisper nick msg)       = flip handler msg MessageContext {
+  } msg
+onMessage handler (Whisper nick msg)       = handler MessageContext {
     reply           = whisper nick
   , shoutBackOrDrop = \_ -> return ()
   , whisperBack     = whisper nick
   , source          = WhisperSource nick
-  }
+  } msg
 onMessage _       _                        = return ()
-
--- | A utility function for onMessage callers that want access to the their
--- current channel.
-onMessageWithChannel :: Bot m
-                     => (Channel -> MessageContext m -> T.Text -> MonadService s m ())
-                     -> Event -> MonadService s m ()
-onMessageWithChannel handler e@(Shout channel _ _) = onMessage (handler channel) e
-onMessageWithChannel _       _                     = return ()
