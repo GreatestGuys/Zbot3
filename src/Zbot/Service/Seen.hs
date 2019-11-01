@@ -22,7 +22,7 @@ import qualified Data.Text as T
 seen :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 seen history = unitService "Zbot.Service.Seen" (onCommand "!seen" $ strip cmd)
     where
-        strip cmd reply nick = cmd reply (T.strip nick)
+        strip cmd ctx nick = cmd (reply ctx) (T.strip nick)
 
         cmd reply nick = lift $ do
             lastTime <- findLastTime nick

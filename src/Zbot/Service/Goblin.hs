@@ -36,8 +36,9 @@ goblin =
 
 
 handleCommand :: (MonadIO m, Bot m)
-              => Reply m -> T.Text -> MonadService () m ()
-handleCommand reply args = lift $ makeGoblin reply (parse args defaultOptions)
+              => MessageContext m -> T.Text -> MonadService () m ()
+handleCommand ctx args = lift
+                         $ makeGoblin (reply ctx) (parse args defaultOptions)
 
 newtype Options = Options {optLevel :: Int}
 

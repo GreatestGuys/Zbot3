@@ -29,19 +29,21 @@ help = (unitService "Zbot.Service.Help" (onCommands ["!help", "!halp"] handler))
             }
         }
 
-handler :: Bot m => Reply m -> T.Text -> MonadService () m ()
-handler reply arg
+handler :: Bot m => MessageContext m -> T.Text -> MonadService () m ()
+handler ctx arg
     | T.null arg = lift $ do
         Just helpMsg <- lookupHelpSpec "!help"
         replyHelpMsg helpMsg
         services <- servicesWithHelp
-        mapM_ reply ["", "Services with help pages:", ""]
+        mapM_ (whisperBack ctx) ["", "Services with help pages:", ""]
         mapM_ replyServiceAndSpec services
     | otherwise  = lift $ lookupHelpSpec arg >>= maybe replyNone replyHelpMsg
     where
-        replyHelpMsg = mapM_ reply . helpMessage
-        replyNone = reply "There is no such help page."
-        replyServiceAndSpec (service, spec) = reply $ T.concat [
+        replyHelpMsg = (shoutBackOrDrop ctx "Check your DM's ;)" >>)
+                     . mapM_ (whisperBack ctx)
+                     . helpMessage
+        replyNone = reply ctx "There is no such help page."
+        replyServiceAndSpec (service, spec) = whisperBack ctx $ T.concat [
                 "    ", service, ": ", T.intercalate ", " (helpAliases spec)
             ]
 

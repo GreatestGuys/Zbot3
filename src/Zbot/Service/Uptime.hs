@@ -28,8 +28,8 @@ uptime history = do
 
 uptimeHandler :: (MonadIO m, Bot m)
               => Handle m History
-              -> UTCTime -> Reply m -> T.Text -> MonadService () m ()
-uptimeHandler history bootTime reply msg
+              -> UTCTime -> MessageContext m -> T.Text -> MonadService () m ()
+uptimeHandler history bootTime ctx msg
     | ["!uptime"]       <- args = botUptime
     | ["!uptime", nick] <- args = nickUptime nick
     | otherwise      = return ()
@@ -39,12 +39,12 @@ uptimeHandler history bootTime reply msg
         botUptime = do
             now <- liftIO getCurrentTime
             let up = diffUTCTime now bootTime
-            lift $ reply $ prettyDiffTime up
+            lift $ reply ctx $ prettyDiffTime up
 
         nickUptime nick = lift $ do
             lastTime <- findJoinTime nick
             now      <- liftIO getCurrentTime
-            reply $ maybe notFound (found now) lastTime
+            reply ctx $ maybe notFound (found now) lastTime
             where
                 notFound = T.concat ["There are no records of ", nick, "."]
 
