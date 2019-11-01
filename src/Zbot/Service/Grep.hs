@@ -16,6 +16,7 @@ import Zbot.Service.History
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Trans.Class (lift)
 import Data.List (intercalate)
+import Data.Maybe (isJust, fromJust)
 import Data.Semigroup ((<>))
 import Data.String (fromString)
 import Data.Time.Clock (UTCTime)
@@ -29,21 +30,26 @@ import qualified Data.Text as T
 
 grep :: (MonadIO m, Bot m) => Handle m History -> Service m ()
 grep historyHandle =
-    (unitService "Zbot.Service.Grep" $ onMessageWithChannel handler) {
+    (unitService "Zbot.Service.Grep" $ onMessage handler) {
         helpSpec = Just HelpSpec {
                 helpAliases = ["!grep"]
             ,   helpMessage = T.lines
                             . T.pack
                             . show
-                            $ parserHelp defaultPrefs (mkGrepParser "")
+                            $ parserHelp defaultPrefs (mkGrepParser Nothing)
             }
     }
     where
-        handler channel ctx msg
-            | ("!grep":rest) <- args = grepCommand channel (reply ctx) rest
-            | otherwise              = return ()
+        handler ctx msg
+            | ("!grep":rest) <- args
+            = grepCommand (channel $ source ctx) (reply ctx) rest
+            | otherwise
+            = return ()
             where
                 args = T.words msg
+                channel (ShoutSource channel _) = Just channel
+                channel _                       = Nothing
+
 
         grepCommand channel reply args = lift $
             case parseGrepOptions parser args of
@@ -65,12 +71,13 @@ data GrepOptions = GrepOptions {
         optContext  :: Int
     ,   optMatches  :: Int
     ,   optShowCmds :: Bool
+    ,   optHideTime :: Bool
     ,   optNick     :: Maybe Nick
     ,   optChannel  :: Channel
     ,   optQuery    :: T.Text
     }
 
-mkGrepParser :: Channel -> Parser GrepOptions
+mkGrepParser :: Maybe Channel -> Parser GrepOptions
 mkGrepParser c = do
     optContext <- option auto (long "context"
                <> short 'c'
@@ -85,6 +92,9 @@ mkGrepParser c = do
     optShowCmds <- switch (long "show-commands"
                 <> short 'S'
                 <> help "Match lines prefixed with '!'")
+    optHideTime <- switch (long "hide-time"
+                <> short 'T'
+                <> help "Suppress the time stamp in output")
     optNick <- optional (textOption (long "nick"
             <> short 'n'
             <> metavar "NICK"
@@ -92,8 +102,10 @@ mkGrepParser c = do
     optChannel <- textOption (long "channel"
                <> short 'C'
                <> metavar "CHANNEL"
-               <> value (T.unpack c)
-               <> help "The channel to match against")
+               <> help "The channel to match against"
+               <> if isJust c
+                  then value $ T.unpack $ fromJust c
+                  else mempty)
     optQuery <-  T.intercalate " "
              <$> (some . textArgument $ metavar "QUERY")
 
@@ -177,8 +189,10 @@ describe GrepOptions{..} GrepResult{..} =
     :  map format resSuffix
     where
     format (time, nick, msg) = colorize ([
-            fromString $ show time
-        ,   " ", colorText resChannel
+            if optHideTime
+            then ""
+            else fromString $ show time ++ " "
+        ,   colorText resChannel
         ,   " ", colorText nick
         ,   "> "
         ] ++ msg)

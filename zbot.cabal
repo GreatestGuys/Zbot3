@@ -157,6 +157,7 @@ test-suite zbot-tests
             Zbot.TestCase
         ,   Zbot.Tests.Describe
         ,   Zbot.Tests.Dude
+        ,   Zbot.Tests.Grep
         ,   Zbot.Tests.Help
         ,   Zbot.Tests.Onion
         ,   Zbot.Tests.Replace
