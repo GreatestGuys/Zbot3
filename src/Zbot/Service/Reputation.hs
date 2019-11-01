@@ -66,8 +66,9 @@ serializeReputation (MkReputation m) = serializeShow m
 deserializeReputation :: BS.ByteString -> Maybe Reputation
 deserializeReputation = fmap MkReputation . deserializeRead
 
-handler :: (MonadIO m, Bot m) => Channel -> Reply m -> T.Text -> MonadService Reputation m ()
-handler channel reply msg
+handler :: (MonadIO m, Bot m)
+        => Channel -> MessageContext m -> T.Text -> MonadService Reputation m ()
+handler channel ctx msg
     | ["+1", nick]                      <- args = plus nick
     | ["-1", nick]                      <- args = minus nick
     | [T.stripPrefix "++" -> Just nick] <- args = plus nick
@@ -103,7 +104,7 @@ handler channel reply msg
             mapM_ (uncurry replyRep) sorted
 
         replyRep nick rep = lift
-                          $ reply
+                          $ reply ctx
                           $ T.concat [nick, " has ", showText rep, " rep"]
 
 wrapModify :: Bot m

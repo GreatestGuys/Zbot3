@@ -27,10 +27,10 @@ morse = (unitService  "Zbot.Service.Morse" $ onMessage handler) {
           }
     }
 
-handler :: Bot m => Reply m -> T.Text -> MonadService () m ()
-handler reply msg
-    | "!morse"   == cmd = lift . reply $ encodeMorse args
-    | "!unmorse" == cmd = lift . reply $ decodeMorse args
+handler :: Bot m => MessageContext m -> T.Text -> MonadService () m ()
+handler ctx msg
+    | "!morse"   == cmd = lift . reply ctx $ encodeMorse args
+    | "!unmorse" == cmd = lift . reply ctx $ decodeMorse args
     | otherwise         = return ()
     where
         (cmd,args) = T.breakOn " " msg

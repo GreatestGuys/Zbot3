@@ -78,7 +78,7 @@ github = Service {
     }
 
 handler :: (Catch.MonadCatch m, MonadIO m, Bot m)
-        => Reply m
+        => MessageContext m
         -> T.Text
         -> MonadService GitHub m ()
 handler reply msg
@@ -91,15 +91,17 @@ handler reply msg
             close  p = maybe (emptyGitHubAction p) closeIssue (toProject p)
             args     = T.words msg
 
-type GitHubAction = forall m. (MonadIO m) => Reply m -> T.Text -> GitHubAccessToken -> m ()
+type GitHubAction = forall m. (MonadIO m)
+                  => MessageContext m -> T.Text -> GitHubAccessToken -> m ()
 
 emptyGitHubAction :: T.Text -> GitHubAction
-emptyGitHubAction project reply _ _ = reply $ "No project alias: " `T.append` project
+emptyGitHubAction project ctx _ _ = reply ctx
+                                  $ "No project alias: " `T.append` project
 
 reportIssue :: Project -> GitHubAction
-reportIssue project reply issue accessToken = do
+reportIssue project ctx issue accessToken = do
         result <- liftIO $ postWith options issueEndpoint payload
-        reply $ toIssueUrl result
+        reply ctx $ toIssueUrl result
         where
             options = defaults & param "access_token" .~ [accessToken]
 
@@ -117,9 +119,9 @@ reportIssue project reply issue accessToken = do
             errorMsg = "Encountered an error while filing the issue."
 
 closeIssue :: Project -> GitHubAction
-closeIssue project reply number accessToken = do
+closeIssue project ctx number accessToken = do
         result <- liftIO $ postWith options issueEndpoint payload
-        reply $ toIssueUrl result
+        reply ctx $ toIssueUrl result
         where
             options = defaults & param "access_token" .~ [accessToken]
 
@@ -139,14 +141,14 @@ closeIssue project reply number accessToken = do
 
 
 githubHandler :: (Catch.MonadCatch m, MonadIO m, Bot m)
-              => GitHubAction -> Reply m -> T.Text -> MonadService GitHub m ()
-githubHandler h reply issue =   gets unGitHub
-                            >>= lift . maybe reportNotConfigured reportIssueSafe
+              => GitHubAction -> MessageContext m -> T.Text -> MonadService GitHub m ()
+githubHandler h ctx issue =   gets unGitHub
+                          >>= lift . maybe reportNotConfigured reportIssueSafe
     where
-        reportNotConfigured = reply "GitHub service is not configured."
+        reportNotConfigured = reply ctx "GitHub service is not configured."
 
-        reportIssueSafe = flip Catch.catch errorHandler . h reply issue
+        reportIssueSafe = flip Catch.catch errorHandler . h ctx issue
 
         errorMsg = "Encountered an error while accessing GitHub api."
 
-        errorHandler (_ :: Catch.SomeException) = reply errorMsg
+        errorHandler (_ :: Catch.SomeException) = reply ctx errorMsg
