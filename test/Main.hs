@@ -6,7 +6,6 @@ import Zbot.Tests.Replace
 import Zbot.Tests.Reputation
 import Zbot.Tests.Roll
 import Zbot.Tests.Typo
-import Zbot.Tests.YouTube
 
 import Test.Tasty
 
@@ -18,5 +17,4 @@ main = defaultMain $ testGroup "ZBot Tests" [
   , reputationTests
   , rollTests
   , typoTests
-  , youTubeTests
   ]
