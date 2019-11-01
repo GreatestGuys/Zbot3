@@ -34,7 +34,7 @@ data Distribution a = Distribution {
     } deriving (Eq, Show, Read)
 
 newtype Model (n :: Nat) a = Model (Map.Map (Gram n a) (Distribution a))
-    deriving (Eq, Read, Semigroup)
+    deriving (Eq, Read)
 
 instance Ord a => Monoid (Distribution a) where
     mempty = Distribution 0 Map.empty
