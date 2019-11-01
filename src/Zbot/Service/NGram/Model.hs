@@ -31,13 +31,14 @@ type Gram (n :: Nat) a = Seq.Seq (Token a)
 data Distribution a = Distribution {
         distSize    :: Int64
     ,   distSamples :: Map.Map (Token a) Int64
-    } deriving (Eq, Show, Read, Semigroup)
+    } deriving (Eq, Show, Read)
 
 newtype Model (n :: Nat) a = Model (Map.Map (Gram n a) (Distribution a))
     deriving (Eq, Read, Semigroup)
 
-instance Ord a => Semigroup (Distribution a) where
-    (<>) (Distribution sizeA distA) (Distribution sizeB distB)
+instance Ord a => Monoid (Distribution a) where
+    mempty = Distribution 0 Map.empty
+    mappend (Distribution sizeA distA) (Distribution sizeB distB)
         = Distribution {
             distSamples = Map.unionWith (+) distA distB
         ,   distSize    = sizeA + sizeB
