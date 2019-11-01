@@ -22,6 +22,8 @@ typo :: (MonadIO m, Bot m) => Int -> Handle m History -> Service m ()
 typo maxDistance history = unitService "Zbot.Service.Typo" handler
     where
         handler (Shout channel nick msg)
+            | "*" `T.isPrefixOf` msg && "*" `T.isSuffixOf` msg
+            = return () -- Ignore things like "*vomit*".
             | "*" `T.isSuffixOf` msg
             = lift
             $ handleMessage (shout channel) channel nick msg
