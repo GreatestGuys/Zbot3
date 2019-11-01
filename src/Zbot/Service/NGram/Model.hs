@@ -36,8 +36,9 @@ data Distribution a = Distribution {
 newtype Model (n :: Nat) a = Model (Map.Map (Gram n a) (Distribution a))
     deriving (Eq, Read)
 
-instance Ord a => Semigroup (Distribution a) where
-    (<>) (Distribution sizeA distA) (Distribution sizeB distB)
+instance Ord a => Monoid (Distribution a) where
+    mempty = Distribution 0 Map.empty
+    mappend (Distribution sizeA distA) (Distribution sizeB distB)
         = Distribution {
             distSamples = Map.unionWith (+) distA distB
         ,   distSize    = sizeA + sizeB
