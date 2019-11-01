@@ -14,6 +14,7 @@ module Zbot.Core.Service.Types (
 
 import Zbot.Core.Irc
 
+import Control.Monad.Fail (MonadFail)
 import Control.Monad.State
 
 import qualified Control.Monad.Catch as Catch
@@ -52,6 +53,7 @@ newtype MonadService s m b = MkMonadService (StateT (ServiceMeta s) m b)
               Catch.MonadThrow,
               Functor,
               Monad,
+              MonadFail,
               MonadIO,
               MonadTrans)
 
@@ -67,7 +69,7 @@ serviceName :: (Applicative m, Monad m) => MonadService a m T.Text
 serviceName = MkMonadService $ metaName <$> get
 
 -- | A Collective is a group of managed services that can process IRC events.
-class (Applicative m, Functor m, Monad m) => Collective m where
+class (Applicative m, Functor m, Monad m, MonadFail m) => Collective m where
 
     -- | An opaque handle that can be used to run operations in a state monad
     -- containing the state of the corresponding service. The first parameter is
