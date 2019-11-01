@@ -31,10 +31,10 @@ type Gram (n :: Nat) a = Seq.Seq (Token a)
 data Distribution a = Distribution {
         distSize    :: Int64
     ,   distSamples :: Map.Map (Token a) Int64
-    } deriving (Eq, Show, Read)
+    } deriving (Eq, Show, Read, Semigroup)
 
 newtype Model (n :: Nat) a = Model (Map.Map (Gram n a) (Distribution a))
-    deriving (Eq, Read)
+    deriving (Eq, Read, Semigroup)
 
 instance Ord a => Semigroup (Distribution a) where
     (<>) (Distribution sizeA distA) (Distribution sizeB distB)
