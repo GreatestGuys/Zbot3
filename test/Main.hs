@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Zbot.Tests.Describe
 import Zbot.Tests.Dude
 import Zbot.Tests.Grep
 import Zbot.Tests.Help
@@ -17,7 +18,8 @@ import Test.Tasty
 
 main :: IO ()
 main = defaultMain $ testGroup "ZBot Tests" [
-    dudeTests
+    describeTests
+  , dudeTests
   , grepTests
   , helpTests
   , onionTests
