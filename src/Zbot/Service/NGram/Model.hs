@@ -43,9 +43,14 @@ instance Ord a => Semigroup (Distribution a) where
         ,   distSize    = sizeA + sizeB
         }
 
+instance Ord a => Monoid (Distribution a) where
+    mempty = Distribution 0 Map.empty
+
+instance Ord a => Semigroup (Model n a) where
+    (<>) (Model a) (Model b) = Model $ Map.unionWith (<>) a b
+
 instance Ord a => Monoid (Model n a) where
     mempty = Model Map.empty
-    mappend (Model a) (Model b) = Model $ Map.unionWith (<>) a b
 
 instance Show a => Show (Model n a) where
     show (Model m) = concat $ toList $ Map.mapWithKey showModelEntry m
