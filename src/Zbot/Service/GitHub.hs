@@ -83,24 +83,25 @@ handler :: (Catch.MonadCatch m, MonadIO m, Bot m)
         -> T.Text
         -> MonadService GitHub m ()
 handler reply msg
-        | ("!report":project:issue)   <- args = githubHandler (report project) reply
-                                              $ T.intercalate " " issue
-        | ["!close", project, number] <- args = githubHandler (close project) reply number
+        | ("!report":project:words)   <- args =
+            let issue = T.intercalate " " words
+            in githubHandler (report project issue) reply
+        | ["!close", project, number] <- args = githubHandler (close project number) reply
         | otherwise                           = return ()
         where
-            report p = maybe (emptyGitHubAction p) reportIssue (toProject p)
-            close  p = maybe (emptyGitHubAction p) closeIssue (toProject p)
-            args     = T.words msg
+            report p i = maybe (emptyGitHubAction p) (reportIssue i) (toProject p)
+            close  p i = maybe (emptyGitHubAction p) (closeIssue i) (toProject p)
+            args       = T.words msg
 
 type GitHubAction = forall m. (MonadIO m)
-                  => MessageContext m -> T.Text -> Options -> m ()
+                  => MessageContext m -> Options -> m ()
 
 emptyGitHubAction :: T.Text -> GitHubAction
-emptyGitHubAction project ctx _ _ = reply ctx
-                                  $ "No project alias: " `T.append` project
+emptyGitHubAction project ctx _ = reply ctx
+                                $ "No project alias: " `T.append` project
 
-reportIssue :: Project -> GitHubAction
-reportIssue project ctx issue options = do
+reportIssue :: T.Text -> Project -> GitHubAction
+reportIssue issue project ctx options = do
         result <- liftIO $ postWith options issueEndpoint payload
         reply ctx $ toIssueUrl result
         where
@@ -117,8 +118,8 @@ reportIssue project ctx issue options = do
 
             errorMsg = "Encountered an error while filing the issue."
 
-closeIssue :: Project -> GitHubAction
-closeIssue project ctx number options = do
+closeIssue :: T.Text -> Project -> GitHubAction
+closeIssue number project ctx options = do
         result <- liftIO $ postWith options issueEndpoint payload
         reply ctx $ toIssueUrl result
         where
@@ -136,13 +137,10 @@ closeIssue project ctx number options = do
 
             errorMsg = "Encountered an error while closing the issue."
 
-addTnakChatEmoji :: GitHubAction
-addTnakChatEmoji ctx args
-
 githubHandler :: (Catch.MonadCatch m, MonadIO m, Bot m)
-              => GitHubAction -> MessageContext m -> T.Text -> MonadService GitHub m ()
-githubHandler h ctx issue =   gets unGitHub
-                          >>= lift . maybe reportNotConfigured reportIssueSafe
+              => GitHubAction -> MessageContext m -> MonadService GitHub m ()
+githubHandler h ctx =   gets unGitHub
+                    >>= lift . maybe reportNotConfigured reportIssueSafe
     where
         tokenToOptions accessToken =
             let authHeader = T.encodeUtf8 $ "token " `T.append` accessToken
@@ -150,8 +148,8 @@ githubHandler h ctx issue =   gets unGitHub
 
         reportNotConfigured = reply ctx "GitHub service is not configured."
 
-        reportIssueSafe = flip Catch.catch errorHandler . h ctx issue . tokenToOptions
+        reportIssueSafe = flip Catch.catch errorHandler . h ctx . tokenToOptions
 
         errorMsg = "Encountered an error while accessing GitHub api."
 
-        errorHandler (e :: Catch.SomeException) = reply ctx errorMsg
+        errorHandler (_ :: Catch.SomeException) = reply ctx errorMsg
