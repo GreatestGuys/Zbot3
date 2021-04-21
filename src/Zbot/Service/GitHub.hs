@@ -19,10 +19,11 @@ import Data.Aeson ((.=), object)
 import Data.Aeson.Lens (key, _String)
 import Data.Maybe (fromMaybe)
 import Network.Wreq (defaults, postWith, responseBody)
-import Network.Wreq.Lens (param)
+import Network.Wreq.Lens (header)
 
 import qualified Control.Monad.Catch as Catch
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 
 type GitHubAccessToken = T.Text
@@ -103,7 +104,8 @@ reportIssue project ctx issue accessToken = do
         result <- liftIO $ postWith options issueEndpoint payload
         reply ctx $ toIssueUrl result
         where
-            options = defaults & param "access_token" .~ [accessToken]
+            authHeader = T.encodeUtf8 $ "token " `T.append` accessToken
+            options = defaults & header "Authorization" .~ [authHeader]
 
             payload = object ["title" .= issue]
 
@@ -123,7 +125,8 @@ closeIssue project ctx number accessToken = do
         result <- liftIO $ postWith options issueEndpoint payload
         reply ctx $ toIssueUrl result
         where
-            options = defaults & param "access_token" .~ [accessToken]
+            authHeader = T.encodeUtf8 $ "token " `T.append` accessToken
+            options = defaults & header "Authorization" .~ [authHeader]
 
             payload = object ["state" .= ("closed" :: T.Text)]
 
@@ -151,4 +154,4 @@ githubHandler h ctx issue =   gets unGitHub
 
         errorMsg = "Encountered an error while accessing GitHub api."
 
-        errorHandler (_ :: Catch.SomeException) = reply ctx errorMsg
+        errorHandler (e :: Catch.SomeException) = reply ctx errorMsg >> reply ctx (T.pack $ show e)
