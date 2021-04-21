@@ -18,7 +18,7 @@ import Control.Monad.Trans.Class (lift)
 import Data.Aeson ((.=), object)
 import Data.Aeson.Lens (key, _String)
 import Data.Maybe (fromMaybe)
-import Network.Wreq (defaults, postWith, responseBody)
+import Network.Wreq (defaults, postWith, responseBody, Options)
 import Network.Wreq.Lens (header)
 
 import qualified Control.Monad.Catch as Catch
@@ -41,7 +41,7 @@ toProject _           = Nothing
 
 getURL :: Project -> String
 getURL Ircstats = "GreatestGuys/irc-stats"
-getURL Ggircd    = "fimad/ggircd"
+getURL Ggircd   = "fimad/ggircd"
 getURL Peefuck  = "fimad/pifuxelck"
 getURL Tnakchat = "fimad/TnakChat"
 getURL Zbot     = "GreatestGuys/Zbot3"
@@ -93,20 +93,17 @@ handler reply msg
             args     = T.words msg
 
 type GitHubAction = forall m. (MonadIO m)
-                  => MessageContext m -> T.Text -> GitHubAccessToken -> m ()
+                  => MessageContext m -> T.Text -> Options -> m ()
 
 emptyGitHubAction :: T.Text -> GitHubAction
 emptyGitHubAction project ctx _ _ = reply ctx
                                   $ "No project alias: " `T.append` project
 
 reportIssue :: Project -> GitHubAction
-reportIssue project ctx issue accessToken = do
+reportIssue project ctx issue options = do
         result <- liftIO $ postWith options issueEndpoint payload
         reply ctx $ toIssueUrl result
         where
-            authHeader = T.encodeUtf8 $ "token " `T.append` accessToken
-            options = defaults & header "Authorization" .~ [authHeader]
-
             payload = object ["title" .= issue]
 
             issueEndpoint =  "https://api.github.com/repos/"
@@ -121,13 +118,10 @@ reportIssue project ctx issue accessToken = do
             errorMsg = "Encountered an error while filing the issue."
 
 closeIssue :: Project -> GitHubAction
-closeIssue project ctx number accessToken = do
+closeIssue project ctx number options = do
         result <- liftIO $ postWith options issueEndpoint payload
         reply ctx $ toIssueUrl result
         where
-            authHeader = T.encodeUtf8 $ "token " `T.append` accessToken
-            options = defaults & header "Authorization" .~ [authHeader]
-
             payload = object ["state" .= ("closed" :: T.Text)]
 
             issueEndpoint =  "https://api.github.com/repos/"
@@ -142,16 +136,22 @@ closeIssue project ctx number accessToken = do
 
             errorMsg = "Encountered an error while closing the issue."
 
+addTnakChatEmoji :: GitHubAction
+addTnakChatEmoji ctx args
 
 githubHandler :: (Catch.MonadCatch m, MonadIO m, Bot m)
               => GitHubAction -> MessageContext m -> T.Text -> MonadService GitHub m ()
 githubHandler h ctx issue =   gets unGitHub
                           >>= lift . maybe reportNotConfigured reportIssueSafe
     where
+        tokenToOptions accessToken =
+            let authHeader = T.encodeUtf8 $ "token " `T.append` accessToken
+            in defaults & header "Authorization" .~ [authHeader]
+
         reportNotConfigured = reply ctx "GitHub service is not configured."
 
-        reportIssueSafe = flip Catch.catch errorHandler . h ctx issue
+        reportIssueSafe = flip Catch.catch errorHandler . h ctx issue . tokenToOptions
 
         errorMsg = "Encountered an error while accessing GitHub api."
 
-        errorHandler (e :: Catch.SomeException) = reply ctx errorMsg >> reply ctx (T.pack $ show e)
+        errorHandler (e :: Catch.SomeException) = reply ctx errorMsg
