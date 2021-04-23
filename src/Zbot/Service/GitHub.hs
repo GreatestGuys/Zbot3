@@ -28,6 +28,7 @@ import qualified Control.Monad.Catch as Catch
 import qualified Data.Text as T
 import qualified Data.Text.Conversions as T
 import qualified Data.Text.Encoding as T
+import qualified Data.Text.IO as T
 
 
 type GitHubAccessToken = T.Text
@@ -162,6 +163,7 @@ addTnakChatEmoji emoji url ctx options
     let apiBase = "https://api.github.com/repos/fimad/tnakchat/"
     let gitBase = apiBase ++ "git/"
     let emoji = T.toLower emoji
+    liftIO $ T.putStrLn $ "Adding new emoji: " `T.append` emoji
     void $ runMaybeT $ do
       -- Obtain a reference to HEAD on master.
       (headSha, headUrl) <- MaybeT $ liftIO $ do
@@ -169,6 +171,7 @@ addTnakChatEmoji emoji url ctx options
         let url = result ^? responseBody . key "object" . key "url" . _String
         let sha = result ^? responseBody . key "object" . key "sha" . _String
         return $ (,) <$> sha <*> url
+      liftIO $ T.putStrLn $ "  - Current HEAD: " `T.append` headSha
 
       -- Get a reference to the tree that corresponds to the head commit.
       (treeSha, treeUrl) <- MaybeT $ liftIO $ do
@@ -176,6 +179,7 @@ addTnakChatEmoji emoji url ctx options
         return $ (,)
                <$> result ^? responseBody . key "tree" . key "sha" . _String
                <*>  result ^? responseBody . key "tree" . key "url" . _String
+      liftIO $ T.putStrLn $ "  - Current tree: " `T.append` treeSha
 
       -- Find the emoji.js file within the current tree.
       let emojiJsPath = "web/components/message-group/decorators/emoji.js"
@@ -186,6 +190,7 @@ addTnakChatEmoji emoji url ctx options
                         . key "tree"
                         . values . filtered hasTargetPath
                         . key "url" . _String
+      liftIO $ T.putStrLn $ "  - Current emoji JS (URL): " `T.append` emojiJsUrl
 
       -- Grab the content of the emoji.js file so that it can be updated.
       emojiJsBase64 <- MaybeT $ liftIO $ do
@@ -194,6 +199,7 @@ addTnakChatEmoji emoji url ctx options
       let decodeBase64 base64 = T.decodeUtf8 . T.unBase64
                               <$> T.convertText (T.replace "\n" "" base64)
       emojiJs <- MaybeT $ return $ decodeBase64 emojiJsBase64
+      liftIO $ T.putStrLn $ "  - Fetched current emoji JS"
 
       -- Edit the emojiJs file to include the new emoji.
       let extension = if ".gif" `T.isInfixOf` url then ".gif" else ".png"
@@ -210,12 +216,14 @@ addTnakChatEmoji emoji url ctx options
       newEmojiImage <- liftIO $ do
           response <- get $ T.unpack url
           return $ response ^. responseBody
+      liftIO $ T.putStrLn $ "  - Fetched new image"
 
       -- Upload a file new blob containing the edited emoji JS.
       newEmojiJsSha <- MaybeT $ liftIO $ do
         let payload = object ["content" .= newEmojiJs]
         result <- postWith options (gitBase ++ "blobs") payload
         return $ result ^? responseBody . key "sha" . _String
+      liftIO $ T.putStrLn $ "  - New emoji JS sha: " `T.append` newEmojiJsSha
 
       -- Upload a file new blob containing the edited emoji JS.
       newEmojiImageSha <- MaybeT $ liftIO $ do
@@ -224,6 +232,7 @@ addTnakChatEmoji emoji url ctx options
               "encoding" .= ("base64" :: T.Text)]
         result <- postWith options (gitBase ++ "blobs") payload
         return $ result ^? responseBody . key "sha" . _String
+      liftIO $ T.putStrLn $ "  - New emoji JS sha: " `T.append` newEmojiImageSha
 
       -- Create a new tree containing the edited emoji JS file and the emoji
       -- image.
@@ -246,6 +255,7 @@ addTnakChatEmoji emoji url ctx options
                   ]]]
         result <- postWith options (gitBase ++ "trees") payload
         return $ result ^? responseBody . key "sha" . _String
+      liftIO $ T.putStrLn $ "  - New tree: " `T.append` newTreeSha
 
       -- Create a commit that contains the tree with the edited JS file and new
       -- emoji image.
@@ -256,6 +266,7 @@ addTnakChatEmoji emoji url ctx options
               "parents" .= [headSha]]
         result <- postWith options (gitBase ++ "commits") payload
         return $ result ^? responseBody . key "sha" . _String
+      liftIO $ T.putStrLn $ "  - New commit: " `T.append` commitSha
 
       -- Create a new branch that points to the new commit. A branch is required
       -- for creating a pull request.
@@ -267,6 +278,7 @@ addTnakChatEmoji emoji url ctx options
               "sha" .= commitSha]
         result <- postWith options (gitBase ++ "refs") payload
         return $ result ^? responseBody . key "ref" . _String
+      liftIO $ T.putStrLn $ "  - New branch: " `T.append` branchName
 
       -- Create a pull request that contains the suggested emoji.
       pullUrl <- MaybeT $ liftIO $ do
@@ -277,7 +289,9 @@ addTnakChatEmoji emoji url ctx options
               "maintainer_can_modify" .= True]
         result <- postWith options (apiBase ++ "pulls") payload
         return $ result ^? responseBody . key "html_url" . _String
+      liftIO $ T.putStrLn $ "  - New pull request: " `T.append` pullUrl
 
+      liftIO $ T.putStrLn $ "Finished adding new emoji: " `T.append` pullUrl
       lift $ reply ctx pullUrl
 
 githubHandler :: (Catch.MonadCatch m, MonadIO m, Bot m)
