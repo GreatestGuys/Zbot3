@@ -24,10 +24,7 @@ isYouTubeLink = (||) <$> ("youtube.com/watch" `T.isInfixOf`)
 info :: Scraper T.Text T.Text
 info = do
   title <- attr "content" $ "meta" @: ["property" @= "og:title"]
-  -- The view count is given a div with the class "watch-view-count" and will be
-  -- suffixed with the string " views".
-  views <-  T.takeWhile (/= ' ')
-        <$> text ("div" @: [hasClass "watch-view-count"])
+  views <- attr "content" $ "meta" @: ["itemprop" @= "interactionCount"]
   duration <-  prettyPrintDuration
            =<< attr "content" ("meta" @: ["itemprop" @= "duration"])
   return $ T.concat [
