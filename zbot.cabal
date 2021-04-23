@@ -70,6 +70,7 @@ library
         ,   safe
         ,   scalpel              >= 0.3
         ,   text
+        ,   text-conversions
         ,   time
         ,   transformers
         ,   unix
