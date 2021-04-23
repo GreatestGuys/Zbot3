@@ -156,13 +156,13 @@ closeIssue number project ctx options = do
             errorMsg = "Encountered an error while closing the issue."
 
 addTnakChatEmoji :: T.Text -> T.Text -> GitHubAction
-addTnakChatEmoji emoji url ctx options
-  | not $ T.all (\c -> c == '_' || isAlphaNum c) emoji = do
+addTnakChatEmoji emoji' url ctx options
+  | not $ T.all (\c -> c == '_' || isAlphaNum c) emoji' = do
     reply ctx "Emoji contains invalid characters; must be alphanumberic or '_'"
   | otherwise = do
     let apiBase = "https://api.github.com/repos/fimad/tnakchat/"
     let gitBase = apiBase ++ "git/"
-    let emoji = T.toLower emoji
+    let emoji = T.toLower emoji'
     liftIO $ T.putStrLn $ "Adding new emoji: " `T.append` emoji
     void $ runMaybeT $ do
       -- Obtain a reference to HEAD on master.
