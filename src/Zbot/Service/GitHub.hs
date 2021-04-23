@@ -161,6 +161,7 @@ addTnakChatEmoji emoji url ctx options
   | otherwise = do
     let apiBase = "https://api.github.com/repos/fimad/tnakchat/"
     let gitBase = apiBase ++ "git/"
+    let emoji = T.toLower emoji
     void $ runMaybeT $ do
       -- Obtain a reference to HEAD on master.
       (headSha, headUrl) <- MaybeT $ liftIO $ do
