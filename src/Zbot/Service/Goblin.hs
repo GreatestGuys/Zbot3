@@ -92,7 +92,7 @@ parse args opts
 
 prettyGoblin :: Goblin -> [T.Text]
 prettyGoblin Goblin{..} = [
-        T.concat [ name, " (", uuid, ")"
+        T.concat [ name, "(Figurative) (", uuid, "(Literal))"
                  ]
     ,   T.concat [ gender, " Goblin Warrior (", t level, ")"
                  ]
@@ -243,7 +243,7 @@ buySkills ranks skills | ranks <= 0 = return skills
                                    , drop (index + 1) skills
                                    ]
 
--- | Calculate he modifier for a given ability score.
+-- | Calculate the modifier for a given ability score.
 modifier :: Int -> Int
 modifier n = (n - 10) `div` 2
 
