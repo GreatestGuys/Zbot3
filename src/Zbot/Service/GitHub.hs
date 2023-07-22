@@ -181,36 +181,36 @@ addTnakChatEmoji emoji' url ctx options
                <*>  result ^? responseBody . key "tree" . key "url" . _String
       liftIO $ T.putStrLn $ "  - Current tree: " `T.append` treeSha
 
-      -- Find the emoji.js file within the current tree.
-      let emojiJsPath = "web/components/message-group/decorators/emoji.js"
-      emojiJsUrl <- MaybeT $ liftIO $ do
+      -- Find the emoji.ts file within the current tree.
+      let emojiTsPath = "web/components/message-group/decorators/emoji.ts"
+      emojiTsUrl <- MaybeT $ liftIO $ do
         result <- getWith options $ T.unpack treeUrl ++ "?recursive=1"
-        let hasTargetPath = has (key "path" . _String . only emojiJsPath)
+        let hasTargetPath = has (key "path" . _String . only emojiTsPath)
         return $ result ^? responseBody
                         . key "tree"
                         . values . filtered hasTargetPath
                         . key "url" . _String
-      liftIO $ T.putStrLn $ "  - Current emoji JS (URL): " `T.append` emojiJsUrl
+      liftIO $ T.putStrLn $ "  - Current emoji TS (URL): " `T.append` emojiTsUrl
 
-      -- Grab the content of the emoji.js file so that it can be updated.
-      emojiJsBase64 <- MaybeT $ liftIO $ do
-        result <- getWith options $ T.unpack emojiJsUrl
+      -- Grab the content of the emoji.ts file so that it can be updated.
+      emojiTsBase64 <- MaybeT $ liftIO $ do
+        result <- getWith options $ T.unpack emojiTsUrl
         return $ result ^? responseBody . key "content" . _String
       let decodeBase64 base64 = T.decodeUtf8 . T.unBase64
                               <$> T.convertText (T.replace "\n" "" base64)
-      emojiJs <- MaybeT $ return $ decodeBase64 emojiJsBase64
-      liftIO $ T.putStrLn $ "  - Fetched current emoji JS"
+      emojiTs <- MaybeT $ return $ decodeBase64 emojiTsBase64
+      liftIO $ T.putStrLn $ "  - Fetched current emoji TS"
 
-      -- Edit the emojiJs file to include the new emoji.
+      -- Edit the emojiTs file to include the new emoji.
       let extension = if ".gif" `T.isInfixOf` url then ".gif" else ".png"
       let emojiImageName = emoji `T.append` extension
       let edit = T.unlines [
-            "const customEmoji = {",
+            "const customEmoji: { [key: string]: Emoji } = {",
             T.concat ["  ':", emoji, ":': {"],
             "    type: 'image',",
             T.concat ["    value: 'emoji/", emojiImageName, "',"],
             "  },"]
-      let newEmojiJs = T.replace "const customEmoji = {\n" edit emojiJs
+      let newEmojiTs = T.replace "const customEmoji: { [key: string]: Emoji } = {\n" edit emojiTs
 
       -- Download the emoji image to memory.
       newEmojiImage <- liftIO $ do
@@ -218,23 +218,23 @@ addTnakChatEmoji emoji' url ctx options
           return $ response ^. responseBody
       liftIO $ T.putStrLn $ "  - Fetched new image"
 
-      -- Upload a file new blob containing the edited emoji JS.
-      newEmojiJsSha <- MaybeT $ liftIO $ do
-        let payload = object ["content" .= newEmojiJs]
+      -- Upload a file new blob containing the edited emoji TS.
+      newEmojiTsSha <- MaybeT $ liftIO $ do
+        let payload = object ["content" .= newEmojiTs]
         result <- postWith options (gitBase ++ "blobs") payload
         return $ result ^? responseBody . key "sha" . _String
-      liftIO $ T.putStrLn $ "  - New emoji JS sha: " `T.append` newEmojiJsSha
+      liftIO $ T.putStrLn $ "  - New emoji TS sha: " `T.append` newEmojiTsSha
 
-      -- Upload a file new blob containing the edited emoji JS.
+      -- Upload a file new blob containing the edited emoji TS.
       newEmojiImageSha <- MaybeT $ liftIO $ do
         let payload = object [
               "content" .= (T.convertText $ T.Base64 newEmojiImage :: T.Text),
               "encoding" .= ("base64" :: T.Text)]
         result <- postWith options (gitBase ++ "blobs") payload
         return $ result ^? responseBody . key "sha" . _String
-      liftIO $ T.putStrLn $ "  - New emoji JS sha: " `T.append` newEmojiImageSha
+      liftIO $ T.putStrLn $ "  - New emoji TS sha: " `T.append` newEmojiImageSha
 
-      -- Create a new tree containing the edited emoji JS file and the emoji
+      -- Create a new tree containing the edited emoji TS file and the emoji
       -- image.
       let emojiImagePath = "static/emoji/" `T.append` emojiImageName
       newTreeSha <- MaybeT $ liftIO $ do
@@ -242,8 +242,8 @@ addTnakChatEmoji emoji' url ctx options
               "base_tree" .= treeSha,
               "tree" .= [
                   object [
-                      "path" .= emojiJsPath,
-                      "sha" .= newEmojiJsSha,
+                      "path" .= emojiTsPath,
+                      "sha" .= newEmojiTsSha,
                       "mode" .= ("100644" :: T.Text),
                       "type" .= ("blob" :: T.Text)
                   ],
@@ -257,7 +257,7 @@ addTnakChatEmoji emoji' url ctx options
         return $ result ^? responseBody . key "sha" . _String
       liftIO $ T.putStrLn $ "  - New tree: " `T.append` newTreeSha
 
-      -- Create a commit that contains the tree with the edited JS file and new
+      -- Create a commit that contains the tree with the edited TS file and new
       -- emoji image.
       commitSha <- MaybeT $ liftIO $ do
         let payload = object [
