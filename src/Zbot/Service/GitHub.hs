@@ -182,7 +182,7 @@ addTnakChatEmoji emoji' url ctx options
       liftIO $ T.putStrLn $ "  - Current tree: " `T.append` treeSha
 
       -- Find the emoji.js file within the current tree.
-      let emojiJsPath = "web/components/message-group/decorators/emoji.js"
+      let emojiJsPath = "web/components/message-group/decorators/emoji.ts"
       emojiJsUrl <- MaybeT $ liftIO $ do
         result <- getWith options $ T.unpack treeUrl ++ "?recursive=1"
         let hasTargetPath = has (key "path" . _String . only emojiJsPath)
